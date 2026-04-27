@@ -5,8 +5,8 @@
 | Field | Value |
 |---|---|
 | Project Name | Hook Leads |
-| Current Phase | Project Foundation — Milestone 0 |
-| Current Status | Foundation created. No business features implemented yet. |
+| Current Phase | Milestone 1 — Authentication and Workspace |
+| Current Status | Milestone 1 in progress. Batch 1 complete. |
 | Last Verified | 2026-04-27 |
 
 ---
@@ -24,13 +24,68 @@
 - [x] `frontend/.env.example` created with API URL placeholder
 - [x] `docker-compose.yml` created for SQL Server 2022 development database
 - [x] Backend solution builds successfully with 0 errors and 0 warnings
+- [x] Spec Kit constitution created at `docs/specs/constitution.md`
+- [x] MVP specification created at `docs/specs/001-hook-leads-mvp/spec.md`
+- [x] MVP implementation tasks created at `docs/specs/001-hook-leads-mvp/tasks.md`
+- [x] Milestone 0 committed and pushed to `origin/main`
 
-### Not Started
+---
 
-- [ ] Git commit for Milestone 0
-- [ ] Spec Kit constitution
-- [ ] MVP feature specifications
-- [ ] Milestone 1 — Authentication and Workspace
+## Milestone 1 — Authentication and Workspace
+
+### Batch 1 — Database + Domain Entities ✅
+- [x] `UserRole` enum created (`Admin`, `Rep`)
+- [x] `Workspace` entity created
+- [x] `User` entity created with `WorkspaceId`, `PasswordHash`, `Role`, `IsActive`
+- [x] `RefreshToken` entity created with `IsActive` computed property
+- [x] `ICurrentWorkspaceService` interface created in Application layer
+- [x] `AppDbContext` created with global tenant query filters on `User` and `RefreshToken`
+- [x] `AppDbContextFactory` created for `dotnet ef` design-time support
+- [x] EF Core entity configurations created for all three entities
+- [x] `InitialCreate` migration generated — creates `Workspaces`, `Users`, `RefreshTokens` tables
+- [x] `BCrypt.Net-Next` package added to Infrastructure
+- [x] Build result: **0 errors, 0 warnings**
+
+### Batch 2 — Application Use Cases + Validation ⬜
+- [ ] `ICurrentUserService` interface
+- [ ] `IPasswordHasher` interface + BCrypt implementation
+- [ ] `IJwtService` interface + JWT implementation
+- [ ] Refresh token service (generate, rotate, revoke)
+- [ ] `RegisterCommand` + handler + validator
+- [ ] `LoginCommand` + handler + validator
+- [ ] `RefreshTokenCommand` + handler + validator
+- [ ] `LogoutCommand` + handler + validator
+- [ ] `ForgotPasswordCommand` + handler + validator (email stub)
+- [ ] `ResetPasswordCommand` + handler + validator
+- [ ] `InviteMemberCommand` + handler + validator (email stub)
+- [ ] Workspace queries: `GetWorkspaceQuery`, `GetWorkspaceMembersQuery`
+
+### Batch 3 — API Endpoints + Auth Middleware ⬜
+- [ ] `AuthController` (6 endpoints)
+- [ ] `WorkspaceController` (4 endpoints)
+- [ ] `ExceptionHandlingMiddleware`
+- [ ] `CurrentUserService` implementation (resolves from `HttpContext`)
+- [ ] `Program.cs` — JWT Bearer, Serilog, FluentValidation, Hangfire, Swagger, DbContext, DI wiring
+- [ ] `appsettings.Development.json` — connection string placeholder
+
+### Batch 4 — Frontend Auth Pages ⬜
+- [ ] `/login` page
+- [ ] `/register` page
+- [ ] `/forgot-password` page
+- [ ] `/reset-password` page
+- [ ] Auth API client functions
+- [ ] JWT storage + silent refresh on 401
+- [ ] Route protection middleware
+- [ ] Authenticated layout shell
+
+### Batch 5 — Tests + Documentation Update ⬜
+- [ ] `dotnet build` — 0 errors
+- [ ] `npm run build` — 0 errors
+- [ ] Manual test: register → login → refresh → logout
+- [ ] Cross-workspace isolation verified
+- [ ] `PROJECT_PROGRESS.md` updated
+- [ ] `CLAUDE_COMMANDS_LOG.md` updated
+- [ ] Milestone 1 commit
 
 ---
 
@@ -38,10 +93,12 @@
 
 | Milestone | Description | Status |
 |---|---|---|
-| Milestone 0 | Project Foundation | In Progress |
-| Milestone 1 | Authentication and Workspace | Not Started |
-| Milestone 2 | ICP Builder | Not Started |
-| Milestone 3 | Lead Ingestion and Scoring | Not Started |
-| Milestone 4 | AI Outreach and Gmail | Not Started |
-| Milestone 5 | Qualification Queue | Not Started |
-| Milestone 6 | Reporting Dashboard | Not Started |
+| Milestone 0 | Project Foundation | Complete |
+| Milestone 1 | Authentication and Workspace | In Progress |
+| Milestone 2 | ICP Management | Not Started |
+| Milestone 3 | Lead Import and Lead Management | Not Started |
+| Milestone 4 | Lead Scoring and ICP Matching | Not Started |
+| Milestone 5 | AI-Assisted Outreach | Not Started |
+| Milestone 6 | Email Integration and Send Logs | Not Started |
+| Milestone 7 | Export and Notifications | Not Started |
+| Milestone 8 | Dashboard and Polish | Not Started |
