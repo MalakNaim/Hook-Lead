@@ -6,7 +6,7 @@
 |---|---|
 | Project Name | Hook Leads |
 | Current Phase | Milestone 1 — Authentication and Workspace |
-| Current Status | Milestone 1 in progress. Batch 3 complete. |
+| Current Status | Milestone 1 backend complete. Batch 4 (frontend) deferred. Batch 5 build checks passed; live-DB tests pending. |
 | Last Verified | 2026-04-28 |
 
 ---
@@ -82,7 +82,7 @@
 - [x] `Swashbuckle.AspNetCore` pinned to `6.*` (v10 requires `Microsoft.OpenApi 2.x` which reorganises namespaces — incompatible with the project setup)
 - [x] Build result: **0 errors, 0 warnings**
 
-### Batch 4 — Frontend Auth Pages ⬜
+### Batch 4 — Frontend Auth Pages ⏸ (deferred — no frontend work per standing rule)
 - [ ] `/login` page
 - [ ] `/register` page
 - [ ] `/forgot-password` page
@@ -92,14 +92,14 @@
 - [ ] Route protection middleware
 - [ ] Authenticated layout shell
 
-### Batch 5 — Tests + Documentation Update ⬜
-- [ ] `dotnet build` — 0 errors
-- [ ] `npm run build` — 0 errors
-- [ ] Manual test: register → login → refresh → logout
-- [ ] Cross-workspace isolation verified
-- [ ] `PROJECT_PROGRESS.md` updated
-- [ ] `CLAUDE_COMMANDS_LOG.md` updated
-- [ ] Milestone 1 commit
+### Batch 5 — Tests + Documentation Update 🟡 (build checks passed; live-DB tests pending)
+- [x] `dotnet build` — **0 errors, 0 warnings** (confirmed 2026-04-28)
+- [x] `npm run build` — **compiled successfully** on bare Next.js scaffold (Batch 4 pages not yet implemented; re-verify after Batch 4)
+- [ ] Manual test: register → login → refresh → logout — **requires Docker SQL Server + running API** (pending)
+- [ ] Cross-workspace isolation verified — **requires live DB** (pending)
+- [x] `PROJECT_PROGRESS.md` updated
+- [x] `CLAUDE_COMMANDS_LOG.md` updated
+- [ ] Milestone 1 commit — pending user approval after live-DB tests
 
 ---
 

@@ -60,6 +60,16 @@ A running log of prompts and instructions given to Claude Code during developmen
 - **Modified:** `Program.cs` (full rewrite), `appsettings.json`, `appsettings.Development.json`, `HookLeads.Api.csproj` (Swashbuckle pinned to 6.x), `HookLeads.Application.csproj` (added FluentValidation.DependencyInjectionExtensions), `Infrastructure/Persistence/AppDbContext.cs` (added IApplicationDbContext)
 - **Build result:** 0 errors, 0 warnings
 
+## Session 6 — Milestone 1 Batch 5: Build Checks + Documentation
+**Date:** 2026-04-28
+**Summary:** Executed all Batch 5 tasks that can be completed without a live database or frontend pages. Batch 4 (Frontend Auth Pages) is deferred by standing rule ("Do not start frontend work"). Two manual integration tests (register→login→refresh→logout flow and cross-workspace isolation) require Docker SQL Server + a running API and cannot be automated here.
+**Output:**
+- `dotnet build` — **Build succeeded. 0 warnings, 0 errors.** (all 4 projects)
+- `npm run build` — **Compiled successfully.** Next.js 14 bare scaffold produces 5 static pages, 0 TypeScript errors
+- `PROJECT_PROGRESS.md` — updated; Batch 5 marked partially complete; pending items noted
+- `CLAUDE_COMMANDS_LOG.md` — this entry
+- No source code changed — Batch 5 is verification only
+
 ## Future Commands
 
 <!-- Add new entries here as development continues. Use the format above. -->
