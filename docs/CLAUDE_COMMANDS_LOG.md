@@ -70,6 +70,20 @@ A running log of prompts and instructions given to Claude Code during developmen
 - `CLAUDE_COMMANDS_LOG.md` — this entry
 - No source code changed — Batch 5 is verification only
 
+## Session 7 — Milestone 1 Batch 5: Live Backend Verification Tests
+**Date:** 2026-04-28
+**Summary:** Ran all remaining Batch 5 manual tests against a live stack (Docker SQL Server 2022 + dotnet run). Docker Desktop was started via `open -a Docker`. SQL Server container was started with `docker compose up -d` and reached healthy in under 5 seconds. EF Core `InitialCreate` migration was applied with `dotnet ef database update`. API started on `http://localhost:5057`. Eight curl-based test scenarios were executed. All passed. API and containers were stopped cleanly after testing. No source code was modified.
+**Tests run and results:**
+1. `POST /register` — created Workspace A + Alice; returned full JWT pair ✅
+2. `POST /login` correct credentials — returned JWT pair ✅
+3. `POST /login` wrong password — returned `401 {"error":"Invalid email or password."}` ✅
+4. `GET /workspace` with JWT → `200`; without token → `401` ✅
+5. `POST /refresh` — issued new token, revoked old; replayed old → `401` ✅
+6. `POST /logout` → `200`; revoked token replayed at `/refresh` → `401` ✅
+7. FluentValidation envelope — invalid email + short password → `400 {"error":"Validation failed.","errors":[...]}` ✅
+8. Cross-workspace isolation — registered Workspace B (Bob); Bob's token sees only Workspace B + Bob; Alice's token sees only Workspace A + Alice ✅
+**Output:** `PROJECT_PROGRESS.md` updated — Batch 5 fully complete.
+
 ## Future Commands
 
 <!-- Add new entries here as development continues. Use the format above. -->

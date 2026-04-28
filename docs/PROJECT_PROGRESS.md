@@ -6,7 +6,7 @@
 |---|---|
 | Project Name | Hook Leads |
 | Current Phase | Milestone 1 — Authentication and Workspace |
-| Current Status | Milestone 1 backend complete. Batch 4 (frontend) deferred. Batch 5 build checks passed; live-DB tests pending. |
+| Current Status | Milestone 1 backend complete. All backend verification tests passed. Batch 4 (frontend) deferred. |
 | Last Verified | 2026-04-28 |
 
 ---
@@ -92,14 +92,21 @@
 - [ ] Route protection middleware
 - [ ] Authenticated layout shell
 
-### Batch 5 — Tests + Documentation Update 🟡 (build checks passed; live-DB tests pending)
-- [x] `dotnet build` — **0 errors, 0 warnings** (confirmed 2026-04-28)
-- [x] `npm run build` — **compiled successfully** on bare Next.js scaffold (Batch 4 pages not yet implemented; re-verify after Batch 4)
-- [ ] Manual test: register → login → refresh → logout — **requires Docker SQL Server + running API** (pending)
-- [ ] Cross-workspace isolation verified — **requires live DB** (pending)
+### Batch 5 — Tests + Documentation Update ✅
+- [x] `dotnet build` — **0 errors, 0 warnings**
+- [x] `npm run build` — **compiled successfully** on bare Next.js scaffold (re-verify after Batch 4)
+- [x] Manual test: `POST /register` → workspace + JWT pair returned ✅
+- [x] Manual test: `POST /login` → correct credentials return JWT pair ✅
+- [x] Manual test: `POST /login` wrong password → 401 `{"error":"Invalid email or password."}` ✅
+- [x] Manual test: `GET /workspace` with JWT → 200; without token → 401 ✅
+- [x] Manual test: `POST /refresh` → new token issued, old token revoked ✅
+- [x] Manual test: replay rotated-away token → 401 `{"error":"Invalid or expired refresh token."}` ✅
+- [x] Manual test: `POST /logout` → 200; revoked token rejected at `/refresh` → 401 ✅
+- [x] Manual test: FluentValidation error envelope → `{"error":"Validation failed.","errors":[...],"statusCode":400}` ✅
+- [x] Cross-workspace isolation: Workspace B token returns only Workspace B's workspace + members; Alice (Workspace A) is invisible to Bob (Workspace B) and vice versa ✅
 - [x] `PROJECT_PROGRESS.md` updated
 - [x] `CLAUDE_COMMANDS_LOG.md` updated
-- [ ] Milestone 1 commit — pending user approval after live-DB tests
+- [ ] Milestone 1 commit — pending user approval
 
 ---
 
