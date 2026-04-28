@@ -50,6 +50,16 @@ A running log of prompts and instructions given to Claude Code during developmen
 - **Updated:** `PROJECT_PROGRESS.md` — Batch 2 marked complete
 - **Build result:** 0 errors, 0 warnings
 
+## Session 5 — Milestone 1 Batch 3: API Endpoints + Auth Middleware
+**Date:** 2026-04-28
+**Summary:** Implemented the full API layer for Milestone 1. Created Infrastructure service implementations (JwtService, PasswordHasher, JwtSettings), Infrastructure DI extension, Application DI extension with handler + validator registration, Api layer (CurrentUserService, CurrentWorkspaceService, ExceptionHandlingMiddleware, AuthController, WorkspaceController), and rewrote Program.cs with full middleware pipeline. Fixed a Swashbuckle version issue: `Swashbuckle.AspNetCore *` resolved to v10.1.7 which depends on `Microsoft.OpenApi 2.x` (breaking namespace changes); pinned to `6.*` to stay on the stable 1.x OpenAPI SDK. Fixed `AppDbContext` to implement `IApplicationDbContext`.
+**Output:**
+- **New — Infrastructure:** `Services/JwtSettings.cs`, `Services/JwtService.cs`, `Services/PasswordHasher.cs`, `DependencyInjection.cs`
+- **New — Application:** `DependencyInjection.cs`
+- **New — Api:** `Controllers/AuthController.cs`, `Controllers/WorkspaceController.cs`, `Middleware/ExceptionHandlingMiddleware.cs`, `Services/CurrentUserService.cs`, `Services/CurrentWorkspaceService.cs`
+- **Modified:** `Program.cs` (full rewrite), `appsettings.json`, `appsettings.Development.json`, `HookLeads.Api.csproj` (Swashbuckle pinned to 6.x), `HookLeads.Application.csproj` (added FluentValidation.DependencyInjectionExtensions), `Infrastructure/Persistence/AppDbContext.cs` (added IApplicationDbContext)
+- **Build result:** 0 errors, 0 warnings
+
 ## Future Commands
 
 <!-- Add new entries here as development continues. Use the format above. -->

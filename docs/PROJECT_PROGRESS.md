@@ -6,7 +6,7 @@
 |---|---|
 | Project Name | Hook Leads |
 | Current Phase | Milestone 1 — Authentication and Workspace |
-| Current Status | Milestone 1 in progress. Batch 2 complete. |
+| Current Status | Milestone 1 in progress. Batch 3 complete. |
 | Last Verified | 2026-04-28 |
 
 ---
@@ -66,13 +66,21 @@
 - [x] Namespace collision fixes: `RefreshTokenEntity` and `WorkspaceEntity` aliases in auth handlers
 - [x] Build result: **0 errors, 0 warnings**
 
-### Batch 3 — API Endpoints + Auth Middleware ⬜
-- [ ] `AuthController` (6 endpoints)
-- [ ] `WorkspaceController` (4 endpoints)
-- [ ] `ExceptionHandlingMiddleware`
-- [ ] `CurrentUserService` implementation (resolves from `HttpContext`)
-- [ ] `Program.cs` — JWT Bearer, Serilog, FluentValidation, Hangfire, Swagger, DbContext, DI wiring
-- [ ] `appsettings.Development.json` — connection string placeholder
+### Batch 3 — API Endpoints + Auth Middleware ✅
+- [x] `AuthController` — `POST /register`, `/login`, `/refresh`, `/logout`, `/forgot-password`, `/reset-password` (all `[AllowAnonymous]`, thin validation + handler dispatch)
+- [x] `WorkspaceController` — `GET /workspace`, `GET /workspace/members`, `POST /workspace/invite` (`[Authorize(Roles="Admin")]`), `DELETE /workspace/members/{userId}` (`[Authorize(Roles="Admin")]`)
+- [x] `ExceptionHandlingMiddleware` — maps `AppException` (status code from exception), `ValidationException` (400 + error list), unhandled `Exception` (500)
+- [x] `CurrentUserService` — resolves `UserId`, `Email`, `Role` from `ClaimTypes` on `HttpContext`
+- [x] `CurrentWorkspaceService` — resolves `WorkspaceId` from `"workspaceId"` custom JWT claim
+- [x] `JwtService` — `GenerateAccessToken`, `GenerateRefreshToken`, `HashToken` (SHA-256), `GetRefreshTokenExpiry`
+- [x] `PasswordHasher` — BCrypt work-factor 12
+- [x] `Application/DependencyInjection.cs` — `AddApplication()` registers all handlers + validators via `AddValidatorsFromAssembly`
+- [x] `Infrastructure/DependencyInjection.cs` — `AddInfrastructure()` registers DbContext, JwtService, PasswordHasher, Hangfire; `UseInfrastructure()` configures Hangfire dashboard (dev only)
+- [x] `Program.cs` — JWT Bearer, Serilog (console + rolling file), Swagger with Bearer security definition, HttpContextAccessor, `AddApplication()`, `AddInfrastructure()`, `ExceptionHandlingMiddleware`, `UseAuthentication`, `UseAuthorization`
+- [x] `appsettings.json` — ConnectionStrings + Jwt + Hangfire placeholders
+- [x] `appsettings.Development.json` — dev connection string + dev JWT secret
+- [x] `Swashbuckle.AspNetCore` pinned to `6.*` (v10 requires `Microsoft.OpenApi 2.x` which reorganises namespaces — incompatible with the project setup)
+- [x] Build result: **0 errors, 0 warnings**
 
 ### Batch 4 — Frontend Auth Pages ⬜
 - [ ] `/login` page

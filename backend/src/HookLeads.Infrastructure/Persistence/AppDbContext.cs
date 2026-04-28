@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HookLeads.Infrastructure.Persistence;
 
-public class AppDbContext : DbContext
+public class AppDbContext : DbContext, IApplicationDbContext
 {
     private readonly ICurrentWorkspaceService _workspaceService;
 
