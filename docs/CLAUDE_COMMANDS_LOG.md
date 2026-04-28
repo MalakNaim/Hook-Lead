@@ -37,6 +37,19 @@ A running log of prompts and instructions given to Claude Code during developmen
 
 ---
 
+## Session 4 — Milestone 1 Batch 2: Application Layer Use Cases
+**Date:** 2026-04-28
+**Summary:** Resumed Hook Leads from previous session. Inspected repo, found Batch 2 work partially done in untracked files. Ran `dotnet build` and found 3 errors: namespace collision between `HookLeads.Application.Features.Auth.RefreshToken` (namespace) and `HookLeads.Domain.Entities.RefreshToken` (type), affecting LoginCommandHandler, RegisterCommandHandler, and RefreshTokenCommandHandler. Fixed by adding `using RefreshTokenEntity = HookLeads.Domain.Entities.RefreshToken;` alias. Creating the `Features.Workspace` namespace then caused a second collision for `Workspace` entity in RegisterCommandHandler — fixed with `using WorkspaceEntity = HookLeads.Domain.Entities.Workspace;`. Added all missing Batch 2 items.
+**Output:**
+- **Fixed:** Namespace collision in `LoginCommandHandler`, `RegisterCommandHandler`, `RefreshTokenCommandHandler` (type aliases)
+- **Added:** `Features/Workspace/InviteMember/` — command, handler, validator
+- **Added:** `Features/Workspace/GetWorkspace/` — query, handler
+- **Added:** `Features/Workspace/GetWorkspaceMembers/` — query, handler
+- **Added:** `Features/Workspace/RemoveMember/` — command, handler, validator
+- **Added:** `Features/Auth/Logout/LogoutCommandValidator.cs`
+- **Updated:** `PROJECT_PROGRESS.md` — Batch 2 marked complete
+- **Build result:** 0 errors, 0 warnings
+
 ## Future Commands
 
 <!-- Add new entries here as development continues. Use the format above. -->

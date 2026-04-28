@@ -6,8 +6,8 @@
 |---|---|
 | Project Name | Hook Leads |
 | Current Phase | Milestone 1 — Authentication and Workspace |
-| Current Status | Milestone 1 in progress. Batch 1 complete. |
-| Last Verified | 2026-04-27 |
+| Current Status | Milestone 1 in progress. Batch 2 complete. |
+| Last Verified | 2026-04-28 |
 
 ---
 
@@ -46,19 +46,25 @@
 - [x] `BCrypt.Net-Next` package added to Infrastructure
 - [x] Build result: **0 errors, 0 warnings**
 
-### Batch 2 — Application Use Cases + Validation ⬜
-- [ ] `ICurrentUserService` interface
-- [ ] `IPasswordHasher` interface + BCrypt implementation
-- [ ] `IJwtService` interface + JWT implementation
-- [ ] Refresh token service (generate, rotate, revoke)
-- [ ] `RegisterCommand` + handler + validator
-- [ ] `LoginCommand` + handler + validator
-- [ ] `RefreshTokenCommand` + handler + validator
-- [ ] `LogoutCommand` + handler + validator
-- [ ] `ForgotPasswordCommand` + handler + validator (email stub)
-- [ ] `ResetPasswordCommand` + handler + validator
-- [ ] `InviteMemberCommand` + handler + validator (email stub)
-- [ ] Workspace queries: `GetWorkspaceQuery`, `GetWorkspaceMembersQuery`
+### Batch 2 — Application Use Cases + Validation ✅
+- [x] `ICurrentUserService` interface
+- [x] `IPasswordHasher` interface
+- [x] `IJwtService` interface
+- [x] `IApplicationDbContext` interface
+- [x] `AppException` (400/401/403/404/409/501 status codes)
+- [x] `AuthResult`, `UserProfileResult`, `WorkspaceResult`, `WorkspaceMemberResult` DTOs
+- [x] `RegisterCommand` + handler + validator
+- [x] `LoginCommand` + handler + validator
+- [x] `RefreshTokenCommand` + handler + validator (token rotation)
+- [x] `LogoutCommand` + handler + validator
+- [x] `ForgotPasswordCommand` + handler + validator (email stub — delivery in Milestone 7)
+- [x] `ResetPasswordCommand` + handler + validator (stub — full impl in Milestone 7)
+- [x] `InviteMemberCommand` + handler + validator (creates inactive user, email stub — Milestone 7)
+- [x] `GetWorkspaceQuery` + handler
+- [x] `GetWorkspaceMembersQuery` + handler
+- [x] `RemoveMemberCommand` + handler + validator (soft-deactivate, self-removal guard)
+- [x] Namespace collision fixes: `RefreshTokenEntity` and `WorkspaceEntity` aliases in auth handlers
+- [x] Build result: **0 errors, 0 warnings**
 
 ### Batch 3 — API Endpoints + Auth Middleware ⬜
 - [ ] `AuthController` (6 endpoints)
