@@ -8,5 +8,7 @@ public interface IApplicationDbContext
     DbSet<Workspace> Workspaces { get; }
     DbSet<User> Users { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
+    DbSet<IcpProfile> IcpProfiles { get; }
+    DbSet<IcpCriterion> IcpCriteria { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

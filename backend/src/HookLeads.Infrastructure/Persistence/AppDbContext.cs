@@ -17,6 +17,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<Workspace> Workspaces => Set<Workspace>();
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<IcpProfile> IcpProfiles => Set<IcpProfile>();
+    public DbSet<IcpCriterion> IcpCriteria => Set<IcpCriterion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,12 +26,17 @@ public class AppDbContext : DbContext, IApplicationDbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         // Global tenant isolation filters. WorkspaceId is null during migrations and background jobs;
-        // the filter is skipped in those cases. RefreshToken gets a matching filter to satisfy
-        // EF Core's requirement that both ends of a required relationship share the same filter logic.
+        // the filter is skipped in those cases. Related entities filter through their parent's WorkspaceId.
         modelBuilder.Entity<User>().HasQueryFilter(u =>
             _workspaceService.WorkspaceId == null || u.WorkspaceId == _workspaceService.WorkspaceId.Value);
 
         modelBuilder.Entity<RefreshToken>().HasQueryFilter(rt =>
             _workspaceService.WorkspaceId == null || rt.User.WorkspaceId == _workspaceService.WorkspaceId.Value);
+
+        modelBuilder.Entity<IcpProfile>().HasQueryFilter(p =>
+            _workspaceService.WorkspaceId == null || p.WorkspaceId == _workspaceService.WorkspaceId.Value);
+
+        modelBuilder.Entity<IcpCriterion>().HasQueryFilter(c =>
+            _workspaceService.WorkspaceId == null || c.IcpProfile.WorkspaceId == _workspaceService.WorkspaceId.Value);
     }
 }

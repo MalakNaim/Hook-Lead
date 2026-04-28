@@ -84,6 +84,21 @@ A running log of prompts and instructions given to Claude Code during developmen
 8. Cross-workspace isolation — registered Workspace B (Bob); Bob's token sees only Workspace B + Bob; Alice's token sees only Workspace A + Alice ✅
 **Output:** `PROJECT_PROGRESS.md` updated — Batch 5 fully complete.
 
+## Session 8 — Milestone 2: ICP Management Backend
+**Date:** 2026-04-28
+**Summary:** Implemented the full ICP Management backend (Milestone 2). Added Domain entities, Infrastructure configurations, Application use cases, and API endpoints. Generated `AddIcpManagement` EF Core migration. Build: 0 errors, 0 warnings. No frontend work per standing rule.
+**Output:**
+- **New — Domain:** `Enums/CriterionType.cs` (`Industry`, `CompanySize`, `JobTitle`, `Geography`, `RevenueRange`); `Entities/IcpProfile.cs`; `Entities/IcpCriterion.cs`
+- **Modified — Domain:** `Entities/Workspace.cs` (added `IcpProfiles` nav collection)
+- **New — Infrastructure:** `Persistence/Configurations/IcpProfileConfiguration.cs`; `Persistence/Configurations/IcpCriterionConfiguration.cs`; `Migrations/AddIcpManagement`
+- **Modified — Infrastructure:** `Persistence/AppDbContext.cs` (added `IcpProfiles`, `IcpCriteria` DbSets + global query filters)
+- **New — Application models:** `Common/Models/IcpCriterionResult.cs`; `Common/Models/IcpProfileResult.cs`
+- **Modified — Application:** `Common/Interfaces/IApplicationDbContext.cs` (added IcpProfiles, IcpCriteria); `DependencyInjection.cs` (added 6 ICP handlers)
+- **New — Application features:** `Features/Icp/CreateIcpProfile/` (command, handler, validator); `Features/Icp/UpdateIcpProfile/` (command, handler, validator); `Features/Icp/GetActiveIcpProfile/` (query, handler); `Features/Icp/AddIcpCriterion/` (command, handler, validator); `Features/Icp/UpdateIcpCriterion/` (command, handler, validator); `Features/Icp/DeleteIcpCriterion/` (handler)
+- **New — Api:** `Controllers/IcpController.cs` — 6 endpoints: POST /icp, PUT /icp/{id}, GET /icp/active, POST /icp/{id}/criteria, PUT /icp/{id}/criteria/{criterionId}, DELETE /icp/{id}/criteria/{criterionId}
+- **Build result:** 0 errors, 0 warnings
+- **Migration:** `AddIcpManagement` generated successfully
+
 ## Future Commands
 
 <!-- Add new entries here as development continues. Use the format above. -->

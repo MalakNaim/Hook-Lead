@@ -5,8 +5,8 @@
 | Field | Value |
 |---|---|
 | Project Name | Hook Leads |
-| Current Phase | Milestone 1 — Authentication and Workspace |
-| Current Status | Milestone 1 backend complete. All backend verification tests passed. Batch 4 (frontend) deferred. |
+| Current Phase | Milestone 2 — ICP Management |
+| Current Status | Milestone 2 backend complete. Build: 0 errors, 0 warnings. Migration AddIcpManagement generated. Batch 4 (frontend) deferred. |
 | Last Verified | 2026-04-28 |
 
 ---
@@ -110,13 +110,55 @@
 
 ---
 
+## Milestone 2 — ICP Management
+
+### Batch 1 — Domain + Infrastructure ✅
+- [x] `CriterionType` enum created (`Industry`, `CompanySize`, `JobTitle`, `Geography`, `RevenueRange`)
+- [x] `IcpProfile` entity created (`Id`, `WorkspaceId`, `Name`, `IsActive`, `UpdatedAt`, nav props)
+- [x] `IcpCriterion` entity created (`Id`, `IcpProfileId`, `CriterionType`, `Value`, `Weight`, nav prop)
+- [x] `Workspace` entity updated — added `IcpProfiles` navigation collection
+- [x] `IcpProfileConfiguration` — Name required max 200; cascade delete on WorkspaceId FK
+- [x] `IcpCriterionConfiguration` — table "IcpCriteria"; CriterionType stored as string max 50; Value max 500; cascade delete on IcpProfileId FK
+- [x] `AppDbContext` — added `IcpProfiles` and `IcpCriteria` DbSets + global query filters (IcpCriterion scoped through IcpProfile.WorkspaceId)
+- [x] `IApplicationDbContext` — added `IcpProfiles` and `IcpCriteria` properties
+- [x] `IcpCriterionResult` DTO created (`Guid Id`, `string CriterionType`, `string Value`, `int Weight`)
+- [x] `IcpProfileResult` DTO created (`Guid Id`, `string Name`, `bool IsActive`, `DateTime UpdatedAt`, `List<IcpCriterionResult> Criteria`)
+- [x] `AddIcpManagement` EF Core migration generated
+- [x] Build result: **0 errors, 0 warnings**
+
+### Batch 2 — Application Use Cases ✅
+- [x] `CreateIcpProfileCommand` + handler + validator (one-active-per-workspace rule enforced; deactivates others on activate)
+- [x] `UpdateIcpProfileCommand` + handler + validator (deactivates others if activating; updates UpdatedAt)
+- [x] `GetActiveIcpProfileQuery` + handler (includes Criteria; returns null if no active profile; scoped via global filter)
+- [x] `AddIcpCriterionCommand` + handler + validator (CriterionType must be valid enum; Weight 1–10; Value max 500)
+- [x] `UpdateIcpCriterionCommand` + handler + validator (loads criterion via profile; validates same rules as Add)
+- [x] `DeleteIcpCriterionCommandHandler` (loads criterion via profile; removes; updates profile.UpdatedAt)
+- [x] `Application/DependencyInjection.cs` — all 6 ICP handlers registered as Scoped
+- [x] Build result: **0 errors, 0 warnings**
+
+### Batch 3 — API Endpoints ✅
+- [x] `IcpController` — 6 endpoints:
+  - `POST /icp` → CreateIcpProfile `[Authorize(Roles="Admin")]` → 201
+  - `PUT /icp/{id}` → UpdateIcpProfile `[Authorize(Roles="Admin")]` → 200
+  - `GET /icp/active` → GetActiveIcpProfile `[Authorize]` → 200 / 404
+  - `POST /icp/{id}/criteria` → AddIcpCriterion `[Authorize(Roles="Admin")]` → 200
+  - `PUT /icp/{id}/criteria/{criterionId}` → UpdateIcpCriterion `[Authorize(Roles="Admin")]` → 200
+  - `DELETE /icp/{id}/criteria/{criterionId}` → DeleteIcpCriterion `[Authorize(Roles="Admin")]` → 204
+- [x] Build result: **0 errors, 0 warnings**
+
+### Batch 4 — Frontend ICP Pages ⏸ (deferred — no frontend work per standing rule)
+- [ ] ICP profile management UI
+- [ ] Add/edit/delete criteria UI
+
+---
+
 ## Milestone History
 
 | Milestone | Description | Status |
 |---|---|---|
 | Milestone 0 | Project Foundation | Complete |
 | Milestone 1 | Authentication and Workspace | In Progress |
-| Milestone 2 | ICP Management | Not Started |
+| Milestone 2 | ICP Management | In Progress (backend complete, frontend deferred) |
 | Milestone 3 | Lead Import and Lead Management | Not Started |
 | Milestone 4 | Lead Scoring and ICP Matching | Not Started |
 | Milestone 5 | AI-Assisted Outreach | Not Started |

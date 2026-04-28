@@ -7,4 +7,5 @@ public class Workspace
     public DateTime CreatedAt { get; set; }
 
     public ICollection<User> Users { get; set; } = new List<User>();
+    public ICollection<IcpProfile> IcpProfiles { get; set; } = new List<IcpProfile>();
 }
