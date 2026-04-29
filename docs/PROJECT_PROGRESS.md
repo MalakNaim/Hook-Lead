@@ -5,8 +5,8 @@
 | Field | Value |
 |---|---|
 | Project Name | Hook Leads |
-| Current Phase | Milestone 5 — AI-Assisted Outreach |
-| Current Status | Milestone 4 backend complete and live-verified. All 6 scoring endpoint checks passed. Ready for Milestone 5. |
+| Current Phase | Milestone 6 — Frontend Foundation |
+| Current Status | Milestone 5 backend complete (Batches 1–4). Frontend foundation added in Milestone 6 Batch 1. |
 | Last Verified | 2026-04-29 |
 
 ---
@@ -440,6 +440,56 @@ Lead Detail Page
 
 ---
 
+---
+
+## Milestone 6 — Frontend Foundation
+
+### Batch 1 — Routing, Auth, Types, Services, Placeholder Pages ✅
+
+**Stack confirmed:** Next.js 14 App Router · TypeScript · Tailwind CSS · `@/*` path alias
+
+**Folder structure added:**
+```
+frontend/
+├── app/
+│   ├── (auth)/login/page.tsx       ← login page with form + JWT storage
+│   ├── (protected)/
+│   │   ├── layout.tsx              ← client-side auth guard + nav header
+│   │   ├── leads/page.tsx          ← leads list with table
+│   │   └── leads/[leadId]/page.tsx ← lead detail + full outreach section
+│   ├── layout.tsx                  ← root layout (title updated)
+│   └── page.tsx                    ← redirects to /leads
+├── lib/
+│   ├── api.ts                      ← apiFetch helper + ApiError class
+│   └── auth.ts                     ← saveTokens / getAccessToken / clearTokens / isAuthenticated
+├── middleware.ts                    ← cookie-based route guard → redirects to /login
+├── services/
+│   ├── leadsService.ts             ← getLeads, getLeadById
+│   └── outreachService.ts          ← getOutreachMessages, generateOutreachMessage,
+│                                      getOutreachEmailDraft, updateOutreachMessageStatus
+└── types/index.ts                  ← Lead, LeadSummary, OutreachMessage, OutreachEmailDraftResult,
+                                       OutreachStatus, PagedResult<T>
+```
+
+**Key decisions:**
+- Auth token stored in `localStorage` under `hl_access_token`; a `hl_token` presence cookie is set simultaneously so `middleware.ts` can redirect unauthenticated requests server-side.
+- Protected routes also do a client-side `isAuthenticated()` check in `useEffect` as a second-pass guard.
+- `apiFetch` reads the token from `localStorage` and attaches `Authorization: Bearer …` header; throws `ApiError` with status code on non-OK responses.
+- `useSearchParams()` in login page is wrapped in `<Suspense>` as required by Next.js 14.
+- `.env.example` updated: `NEXT_PUBLIC_API_URL=http://localhost:5057` (was 5000).
+
+**Lead detail outreach section implements full workflow UI:**
+- Generate Draft button → `POST /leads/{leadId}/outreach/generate`
+- Open Email Draft button → `GET /outreach/messages/{messageId}/email-draft` → `window.open(mailtoUrl)`
+- Mark as Sent button → `PATCH /outreach/messages/{messageId}/status` `{ status: "Sent" }`
+- Cancel button → `PATCH /outreach/messages/{messageId}/status` `{ status: "Cancelled" }`
+
+**Build result:** `npm run build` → **compiled successfully**, 0 TypeScript errors, 0 lint errors
+- Routes: `/` (static redirect), `/login` (static), `/leads` (static), `/leads/[leadId]` (dynamic), `/_not-found`
+- Middleware compiled: 26.6 kB
+
+---
+
 ## Milestone History
 
 | Milestone | Description | Status |
@@ -450,6 +500,6 @@ Lead Detail Page
 | Milestone 3 | Lead Import and Lead Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 4 | Lead Scoring and ICP Matching | Backend Complete ✅ (frontend deferred) |
 | Milestone 5 | AI-Assisted Outreach | Batch 1–4 Complete ✅ (backend + workflow contract) |
-| Milestone 6 | Email Integration and Send Logs | Not Started |
+| Milestone 6 | Frontend Foundation | Batch 1 Complete ✅ |
 | Milestone 7 | Export and Notifications | Not Started |
 | Milestone 8 | Dashboard and Polish | Not Started |
