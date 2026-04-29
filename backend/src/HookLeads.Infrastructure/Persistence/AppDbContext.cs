@@ -19,6 +19,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<IcpProfile> IcpProfiles => Set<IcpProfile>();
     public DbSet<IcpCriterion> IcpCriteria => Set<IcpCriterion>();
+    public DbSet<Lead> Leads => Set<Lead>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,5 +39,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
 
         modelBuilder.Entity<IcpCriterion>().HasQueryFilter(c =>
             _workspaceService.WorkspaceId == null || c.IcpProfile.WorkspaceId == _workspaceService.WorkspaceId.Value);
+
+        modelBuilder.Entity<Lead>().HasQueryFilter(l =>
+            _workspaceService.WorkspaceId == null || l.WorkspaceId == _workspaceService.WorkspaceId.Value);
     }
 }

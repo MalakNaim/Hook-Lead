@@ -15,6 +15,16 @@ using HookLeads.Application.Features.Icp.GetActiveIcpProfile;
 using HookLeads.Application.Features.Icp.AddIcpCriterion;
 using HookLeads.Application.Features.Icp.UpdateIcpCriterion;
 using HookLeads.Application.Features.Icp.DeleteIcpCriterion;
+using HookLeads.Application.Features.Leads.GetLeads;
+using HookLeads.Application.Features.Leads.GetLeadById;
+using HookLeads.Application.Features.Leads.UpdateLead;
+using HookLeads.Application.Features.Leads.DeleteLead;
+using HookLeads.Application.Features.Leads.UpdateLeadStatus;
+using HookLeads.Application.Features.Leads.AddLeadNote;
+using HookLeads.Application.Features.Import.ImportLeadsCsv;
+using HookLeads.Application.Features.Import.ConfirmCsvImport;
+using HookLeads.Application.Features.Import.ImportLinkedInLead;
+using HookLeads.Application.Features.Import.ConfirmLinkedInImport;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HookLeads.Application;
@@ -43,6 +53,18 @@ public static class DependencyInjection
         services.AddScoped<AddIcpCriterionCommandHandler>();
         services.AddScoped<UpdateIcpCriterionCommandHandler>();
         services.AddScoped<DeleteIcpCriterionCommandHandler>();
+
+        services.AddScoped<GetLeadsQueryHandler>();
+        services.AddScoped<GetLeadByIdQueryHandler>();
+        services.AddScoped<UpdateLeadCommandHandler>();
+        services.AddScoped<DeleteLeadCommandHandler>();
+        services.AddScoped<UpdateLeadStatusCommandHandler>();
+        services.AddScoped<AddLeadNoteCommandHandler>();
+
+        services.AddScoped<ImportLeadsCsvCommandHandler>();
+        services.AddScoped<ConfirmCsvImportCommandHandler>();
+        services.AddScoped<ImportLinkedInLeadCommandHandler>();
+        services.AddScoped<ConfirmLinkedInImportCommandHandler>();
 
         return services;
     }

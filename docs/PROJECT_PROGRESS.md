@@ -5,9 +5,9 @@
 | Field | Value |
 |---|---|
 | Project Name | Hook Leads |
-| Current Phase | Milestone 2 — ICP Management |
-| Current Status | Milestone 2 backend complete. Build: 0 errors, 0 warnings. Migration AddIcpManagement generated. Batch 4 (frontend) deferred. |
-| Last Verified | 2026-04-28 |
+| Current Phase | Milestone 4 — Lead Scoring and ICP Matching |
+| Current Status | Milestone 3 backend complete and live-verified. All 25 checks passed. Ready for Milestone 4. |
+| Last Verified | 2026-04-29 |
 
 ---
 
@@ -152,14 +152,90 @@
 
 ---
 
+## Milestone 3 — Lead Import and Lead Management
+
+### Batch 1 — Domain + Infrastructure ✅
+- [x] `LeadStatus` enum created (`New`, `Qualified`, `Disqualified`, `Unsubscribed`)
+- [x] `LeadSource` enum created (`CSV`, `LinkedInUrl`, `Manual`)
+- [x] `Lead` entity created — all fields per spec (`Id`, `WorkspaceId`, `FirstName`, `LastName`, `Email`, `JobTitle`, `Company`, `Industry`, `CompanySize`, `Geography`, `RevenueRange`, `LinkedInUrl`, `Source`, `Status`, `Notes`, `ImportedAt`)
+- [x] `LeadConfiguration` — Email/FirstName/LastName required; Source/Status stored as string; unique index on `(WorkspaceId, Email)`; cascade delete on WorkspaceId FK
+- [x] `AppDbContext` — added `Leads` DbSet + global query filter (scoped by `WorkspaceId`)
+- [x] `IApplicationDbContext` — added `Leads` property
+- [x] `AddLeadManagement` EF Core migration generated
+- [x] Build result: **0 errors, 0 warnings**
+
+### Batch 2 — Application Use Cases ✅
+- [x] `LeadSummaryResult` DTO (for paginated list)
+- [x] `LeadResult` DTO (full detail)
+- [x] `ImportPreviewRow` + `ImportPreviewResult` DTOs
+- [x] `ImportSummaryResult` DTO
+- [x] `PagedResult<T>` generic DTO
+- [x] `GetLeadsQuery` + handler — paginated, filters: status, industry, date range; score range params accepted (deferred to Milestone 4)
+- [x] `GetLeadByIdQuery` + handler — full detail, 404 if not found
+- [x] `UpdateLeadCommand` + handler + validator — editable fields; duplicate email check on change; 409 on conflict
+- [x] `DeleteLeadCommandHandler` — 404 if not found
+- [x] `UpdateLeadStatusCommand` + handler + validator — parses enum; 400 on invalid
+- [x] `AddLeadNoteCommand` + handler + validator — appends `[timestamp | email] note` to Notes field; injects `ICurrentUserService`
+- [x] `ImportLeadsCsvCommand` + handler + validator — parses CSV; maps headers case-insensitively; marks duplicates and invalid emails as invalid in preview
+- [x] `ConfirmCsvImportCommand` + handler — re-checks duplicates at persist time; returns `ImportSummaryResult`
+- [x] `ImportLinkedInLeadCommand` + handler + validator — validates LinkedIn URL; extracts name from handle; returns `ImportPreviewRow`
+- [x] `ConfirmLinkedInImportCommand` + handler + validator — duplicate check; persists with `Source = LinkedInUrl`; 409 on conflict
+- [x] `Application/DependencyInjection.cs` — all 10 new handlers registered as Scoped
+- [x] Build result: **0 errors, 0 warnings**
+
+### Batch 3 — API Endpoints ✅
+- [x] `LeadsController` — 6 endpoints:
+  - `GET /leads` → GetLeads `[Authorize]` → 200 (paginated)
+  - `GET /leads/{id}` → GetLeadById `[Authorize]` → 200 / 404
+  - `PUT /leads/{id}` → UpdateLead `[Authorize(Roles="Admin")]` → 200 / 404 / 409
+  - `DELETE /leads/{id}` → DeleteLead `[Authorize(Roles="Admin")]` → 204 / 404
+  - `PATCH /leads/{id}/status` → UpdateLeadStatus `[Authorize(Roles="Admin")]` → 200 / 400 / 404
+  - `POST /leads/{id}/notes` → AddNote `[Authorize]` → 200 / 404
+- [x] `ImportController` — 4 endpoints (all `[Authorize(Roles="Admin")]`):
+  - `POST /import/csv/preview` → ImportLeadsCsv (multipart file upload) → 200
+  - `POST /import/csv/confirm` → ConfirmCsvImport (JSON rows) → 200
+  - `POST /import/linkedin/preview` → ImportLinkedInLead (URL) → 200
+  - `POST /import/linkedin/confirm` → ConfirmLinkedInImport (full lead fields) → 200 / 409
+- [x] Build result: **0 errors, 0 warnings**
+
+### Batch 5 — Live Verification ✅
+- [x] Docker SQL Server started; migration `AddLeadManagement` applied
+- [x] `Leads` table schema verified: 16 columns, unique index `IX_Leads_WorkspaceId_Email`, FK to `Workspaces`
+- [x] 401 on all unauthenticated requests to `/leads`, `/import/*` ✅
+- [x] `POST /import/csv/preview` — 2 valid rows, validCount/invalidCount correct ✅
+- [x] `POST /import/csv/preview` — missing email row flagged with `"Email is required."` ✅
+- [x] `POST /import/csv/confirm` — imports 2 leads; summary `{imported:2, skipped:0, total:2}` ✅
+- [x] `GET /leads` — paginated list with status/source ✅
+- [x] `GET /leads/{id}` — full detail ✅
+- [x] `PUT /leads/{id}` — field update ✅
+- [x] `PATCH /leads/{id}/status` — valid value updates; invalid value returns 400 with enum message ✅
+- [x] `POST /leads/{id}/notes` — timestamped note appended ✅
+- [x] `DELETE /leads/{id}` — 204; subsequent GET returns 404 ✅
+- [x] `GET /leads?status=New` / `?pageSize=1` — filter and pagination ✅
+- [x] `POST /import/linkedin/preview` → parses handle from URL ✅
+- [x] `POST /import/linkedin/confirm` → creates lead with `source=LinkedInUrl` ✅
+- [x] Workspace isolation — User2 (WorkspaceB) sees empty leads list ✅
+- [x] Cross-workspace 404 — User2 cannot GET a WorkspaceA lead by ID ✅
+- [x] Same email in different workspace is allowed (imported:1) ✅
+- [x] Duplicate email in same workspace is silently skipped (skipped:1) ✅
+- [x] All 25 verification checks: **PASS**
+
+### Batch 4 — Frontend Lead Pages ⏸ (deferred — no frontend work per standing rule)
+- [ ] `/leads` paginated list page
+- [ ] `/leads/[id]` detail page
+- [ ] `/leads/import/csv` page
+- [ ] `/leads/import/linkedin` page
+
+---
+
 ## Milestone History
 
 | Milestone | Description | Status |
 |---|---|---|
 | Milestone 0 | Project Foundation | Complete |
-| Milestone 1 | Authentication and Workspace | In Progress |
-| Milestone 2 | ICP Management | In Progress (backend complete, frontend deferred) |
-| Milestone 3 | Lead Import and Lead Management | Not Started |
+| Milestone 1 | Authentication and Workspace | Complete ✅ |
+| Milestone 2 | ICP Management | Backend Complete ✅ (frontend deferred) |
+| Milestone 3 | Lead Import and Lead Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 4 | Lead Scoring and ICP Matching | Not Started |
 | Milestone 5 | AI-Assisted Outreach | Not Started |
 | Milestone 6 | Email Integration and Send Logs | Not Started |

@@ -99,6 +99,64 @@ A running log of prompts and instructions given to Claude Code during developmen
 - **Build result:** 0 errors, 0 warnings
 - **Migration:** `AddIcpManagement` generated successfully
 
+## Session 9 — Milestone 3: Lead Management Backend
+**Date:** 2026-04-28
+**Summary:** Implemented the full Lead Management and Lead Import backend (Milestone 3). Added Domain enums and entity, Infrastructure configuration with unique index, Application use cases (10 handlers), and API endpoints. Build: 0 errors, 0 warnings. No frontend work per standing rule. One build error encountered (`ToHashSetAsync` not available on `IQueryable<string>`) — fixed by chaining `.ToListAsync().ToHashSet()`.
+**Output:**
+- **New — Domain:** `Enums/LeadStatus.cs`, `Enums/LeadSource.cs`, `Entities/Lead.cs`
+- **New — Infrastructure:** `Persistence/Configurations/LeadConfiguration.cs`, migration `AddLeadManagement`
+- **Modified — Infrastructure:** `Persistence/AppDbContext.cs` (Leads DbSet + workspace filter)
+- **Modified — Application:** `Common/Interfaces/IApplicationDbContext.cs` (Leads), `DependencyInjection.cs` (10 handlers)
+- **New — Application models:** `LeadSummaryResult`, `LeadResult`, `ImportPreviewResult` (includes `ImportPreviewRow`), `ImportSummaryResult`, `PagedResult<T>`
+- **New — Application features:**
+  - `Features/Leads/GetLeads/` (query, handler)
+  - `Features/Leads/GetLeadById/` (query, handler)
+  - `Features/Leads/UpdateLead/` (command, handler, validator)
+  - `Features/Leads/DeleteLead/` (handler)
+  - `Features/Leads/UpdateLeadStatus/` (command, handler, validator)
+  - `Features/Leads/AddLeadNote/` (command, handler, validator)
+  - `Features/Import/ImportLeadsCsv/` (command, handler, validator)
+  - `Features/Import/ConfirmCsvImport/` (command, handler)
+  - `Features/Import/ImportLinkedInLead/` (command, handler, validator)
+  - `Features/Import/ConfirmLinkedInImport/` (command, handler, validator)
+- **New — Api:** `Controllers/LeadsController.cs` (6 endpoints), `Controllers/ImportController.cs` (4 endpoints)
+- **Build result:** 0 errors, 0 warnings
+- **Migration:** `AddLeadManagement` generated successfully
+
+## Session 10 — Milestone 3: Live Backend Verification
+**Date:** 2026-04-29
+**Summary:** Resumed after session limit. Ran full live verification suite for Milestone 3 against Docker SQL Server. Docker Desktop was started; `hookleads-sqlserver` container was restarted from exited state. API started on `http://localhost:5057`. Two test users registered in separate workspaces (WorkspaceA, WorkspaceB). 25 curl-based test scenarios executed across all Leads and Import endpoints. All passed. No source code was modified.
+**Tests run and results:**
+1. Build — `dotnet build` → **0 errors, 0 warnings** ✅
+2. Migration `AddLeadManagement` present in `__EFMigrationsHistory` ✅
+3. `Leads` table: 16 columns, unique index `IX_Leads_WorkspaceId_Email`, FK to `Workspaces` ✅
+4. 401 on `GET /leads` unauthenticated ✅
+5. 401 on `POST /import/csv/preview` unauthenticated ✅
+6. 401 on `POST /import/csv/confirm` unauthenticated ✅
+7. 401 on `PATCH /leads/{id}/status` unauthenticated ✅
+8. 401 on `POST /leads/{id}/notes` unauthenticated ✅
+9. 401 on `DELETE /leads/{id}` unauthenticated ✅
+10. CSV preview — 2 valid rows → `{validCount:2, invalidCount:0}` ✅
+11. CSV preview — missing email row → `{isValid:false, validationError:"Email is required."}` ✅
+12. CSV confirm — 2 rows imported → `{imported:2, skipped:0, total:2}` ✅
+13. `GET /leads` — paginated list returned ✅
+14. `GET /leads/{id}` — full detail ✅
+15. `PUT /leads/{id}` — field update ✅
+16. `PATCH /leads/{id}/status` — `Qualified` accepted ✅
+17. `PATCH /leads/{id}/status` — invalid value → `400` with enum list ✅
+18. `POST /leads/{id}/notes` — timestamped note appended ✅
+19. `DELETE /leads/{id}` → 204; subsequent GET → 404 ✅
+20. `GET /leads?status=New` — filter working ✅
+21. `GET /leads?pageSize=1` — pagination working ✅
+22. LinkedIn preview — parses handle from URL ✅
+23. LinkedIn confirm — creates lead with `source=LinkedInUrl` ✅
+24. Workspace isolation — User2 sees empty leads list ✅
+25. Cross-workspace 404 — User2 cannot access WorkspaceA lead ✅
+26. Same email allowed in different workspace ✅
+27. Duplicate email in same workspace silently skipped (`skipped:1`) ✅
+**Bugs found:** None. One test probe used `"Contacted"` as status (not in enum); API rejected correctly with clear error — expected behavior, not a bug.
+**Output:** `PROJECT_PROGRESS.md` updated — Batch 5 Live Verification added; history table updated. Milestone 3 committed and pushed.
+
 ## Future Commands
 
 <!-- Add new entries here as development continues. Use the format above. -->

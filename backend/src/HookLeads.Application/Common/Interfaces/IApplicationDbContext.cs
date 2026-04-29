@@ -10,5 +10,6 @@ public interface IApplicationDbContext
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<IcpProfile> IcpProfiles { get; }
     DbSet<IcpCriterion> IcpCriteria { get; }
+    DbSet<Lead> Leads { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
