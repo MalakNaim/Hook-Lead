@@ -28,6 +28,7 @@ public class GetLeadByIdQueryHandler
             lead.JobTitle, lead.Company, lead.Industry,
             lead.CompanySize, lead.Geography, lead.RevenueRange, lead.LinkedInUrl,
             lead.Source.ToString(), lead.Status.ToString(),
-            lead.Notes, lead.ImportedAt);
+            lead.Notes, lead.ImportedAt,
+            lead.IcpScore, lead.ScoreBreakdown);
     }
 }

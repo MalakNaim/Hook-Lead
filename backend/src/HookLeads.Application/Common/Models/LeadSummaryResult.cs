@@ -9,4 +9,5 @@ public record LeadSummaryResult(
     string? JobTitle,
     string Status,
     string Source,
-    DateTime ImportedAt);
+    DateTime ImportedAt,
+    int? IcpScore);

@@ -15,4 +15,6 @@ public record LeadResult(
     string Source,
     string Status,
     string? Notes,
-    DateTime ImportedAt);
+    DateTime ImportedAt,
+    int? IcpScore,
+    string? ScoreBreakdown);

@@ -280,6 +280,18 @@
 - [x] Security cleanup: `appsettings.json` reverted to `Password=CHANGE_ME` placeholder; real development credentials stay only in `appsettings.Development.json` (already tracked — credentials mirror docker-compose.yml default, no new exposure)
 - [x] Milestone 4 committed
 
+### Batch 4 Supplement — Score surfaced on lead list + detail ✅
+- [x] `LeadSummaryResult` updated — added `IcpScore` (`int?`) field
+- [x] `LeadResult` updated — added `IcpScore` (`int?`) and `ScoreBreakdown` (`string?`) fields
+- [x] `GetLeadsQueryHandler` — `IcpScore` projected in Select; `MinScore`/`MaxScore` filters implemented (previously commented as "deferred to Milestone 4")
+- [x] `GetLeadByIdQueryHandler` — `IcpScore` and `ScoreBreakdown` mapped from entity
+- [x] All other `LeadResult` constructors updated: `ConfirmLinkedInImportCommandHandler`, `UpdateLeadCommandHandler`, `UpdateLeadStatusCommandHandler`, `AddLeadNoteCommandHandler`
+- [x] Build result: **0 errors, 0 warnings**
+- [x] Live API: `GET /leads` → `icpScore: 100` present in list item ✅
+- [x] Live API: `GET /leads?minScore=90` → returns scored lead (100 ≥ 90) ✅
+- [x] Live API: `GET /leads?maxScore=50` → returns empty (100 > 50) ✅
+- [x] Live API: `GET /leads/{id}` → `icpScore: 100`, `scoreBreakdown` JSON array present in detail ✅
+
 ---
 
 ## Milestone History

@@ -33,7 +33,11 @@ public class GetLeadsQueryHandler
         if (query.DateTo.HasValue)
             q = q.Where(l => l.ImportedAt <= query.DateTo.Value);
 
-        // MinScore / MaxScore filtering deferred to Milestone 4 (LeadScores table not yet created).
+        if (query.MinScore.HasValue)
+            q = q.Where(l => l.IcpScore >= query.MinScore.Value);
+
+        if (query.MaxScore.HasValue)
+            q = q.Where(l => l.IcpScore <= query.MaxScore.Value);
 
         var totalCount = await q.CountAsync(cancellationToken);
 
@@ -45,7 +49,7 @@ public class GetLeadsQueryHandler
                 l.Id, l.FirstName, l.LastName, l.Email,
                 l.Company, l.JobTitle,
                 l.Status.ToString(), l.Source.ToString(),
-                l.ImportedAt))
+                l.ImportedAt, l.IcpScore))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<LeadSummaryResult>(items, totalCount, query.PageNumber, query.PageSize);
