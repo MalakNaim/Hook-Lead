@@ -359,6 +359,85 @@
 - [x] `mailtoUrl` encodes and decodes correctly — subject and body round-trip clean ✅
 - [x] No SMTP/real email sending — backend returns only the mailto-ready link ✅
 
+### Batch 4 — Frontend Workflow Contract + Documentation ✅
+
+#### Outreach Frontend Workflow (manual mailto-based, no SMTP)
+
+```
+Lead Detail Page
+│
+├─ Load outreach messages
+│    GET /leads/{leadId}/outreach/messages
+│    → [] or list of { id, status, subject, sentAt, ... }
+│
+├─ [Generate Draft] button
+│    POST /leads/{leadId}/outreach/generate
+│    → 201 { id, subject, body, status:"Draft", sentAt:null }
+│    (blocked with 400 if lead is Disqualified or Unsubscribed)
+│
+├─ [Open Email Draft] button (per message, status=Draft only)
+│    GET /outreach/messages/{messageId}/email-draft
+│    → 200 { to, subject, body, mailtoUrl }
+│    Frontend: window.open(mailtoUrl)  ← opens user's email client
+│    User reviews/edits and sends manually from their email client
+│
+├─ [Mark as Sent] button (user returns after sending)
+│    PATCH /outreach/messages/{messageId}/status  { "status": "Sent" }
+│    → 200 { id, status:"Sent", sentAt:"<UTC timestamp>", ... }
+│    sentAt is set server-side on first Sent transition; not overwritten after.
+│
+└─ [Cancel] button
+     PATCH /outreach/messages/{messageId}/status  { "status": "Cancelled" }
+     → 200 { id, status:"Cancelled", sentAt:<preserved if previously Sent> }
+     Cancelled messages cannot have an email-draft fetched (400).
+```
+
+#### API Contract for Frontend
+
+| Method | Path | Auth | Success | Notes |
+|--------|------|------|---------|-------|
+| `POST` | `/leads/{leadId}/outreach/generate` | Required | 201 `OutreachMessageResult` | 400 if lead is Disqualified/Unsubscribed; 404 if lead not in workspace |
+| `GET` | `/leads/{leadId}/outreach/messages` | Required | 200 `OutreachMessageResult[]` sorted newest-first | 404 if lead not in workspace |
+| `GET` | `/outreach/messages/{messageId}/email-draft` | Required | 200 `OutreachEmailDraftResult` | 400 if Cancelled or lead email missing; 404 if not in workspace |
+| `PATCH` | `/outreach/messages/{messageId}/status` | Required | 200 `OutreachMessageResult` | Body: `{ "status": "Draft"\|"Sent"\|"Cancelled" }`; 400 on invalid value; 404 if not in workspace |
+
+**`OutreachMessageResult` shape:**
+```json
+{
+  "id": "uuid",
+  "leadId": "uuid",
+  "subject": "string",
+  "body": "string",
+  "status": "Draft | Sent | Cancelled",
+  "createdAt": "2026-04-29T12:00:00Z",
+  "sentAt": "2026-04-29T12:05:00Z | null"
+}
+```
+
+**`OutreachEmailDraftResult` shape:**
+```json
+{
+  "to": "lead@example.com",
+  "subject": "Jane, quick note about Acme Corp",
+  "body": "Hi Jane,\n\nI came across...",
+  "mailtoUrl": "mailto:lead@example.com?subject=Jane%2C%20quick%20note...&body=Hi%20Jane%2C%0A%0A..."
+}
+```
+
+**Frontend notes:**
+- `mailtoUrl` is fully encoded and safe to pass directly to `window.open()`.
+- Newlines in body are encoded as `%0A` and render correctly in most email clients.
+- The backend never sends email — all sending is manual via the user's email client.
+- `sentAt` is set server-side only on the first transition to `Sent`; subsequent status changes do not overwrite it.
+
+#### Verification
+- [x] Build result: **0 errors, 0 warnings** ✅
+- [x] Auth guard — all 4 outreach endpoints return 401 without token ✅
+- [x] Workspace isolation — WS2 token returns 404 for WS1 messages and leads ✅
+- [x] `GET /outreach/messages/{id}/email-draft` Draft message → 200 ✅
+- [x] `GET /outreach/messages/{id}/email-draft` Cancelled message → 400 ✅
+- [x] `PATCH /outreach/messages/{id}/status` `Sent` → 200 with `sentAt` set ✅
+
 ---
 
 ## Milestone History
@@ -370,7 +449,7 @@
 | Milestone 2 | ICP Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 3 | Lead Import and Lead Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 4 | Lead Scoring and ICP Matching | Backend Complete ✅ (frontend deferred) |
-| Milestone 5 | AI-Assisted Outreach | Batch 1 + Batch 2 + Batch 3 Complete ✅ |
+| Milestone 5 | AI-Assisted Outreach | Batch 1–4 Complete ✅ (backend + workflow contract) |
 | Milestone 6 | Email Integration and Send Logs | Not Started |
 | Milestone 7 | Export and Notifications | Not Started |
 | Milestone 8 | Dashboard and Polish | Not Started |
