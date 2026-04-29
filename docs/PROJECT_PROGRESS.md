@@ -6,7 +6,7 @@
 |---|---|
 | Project Name | Hook Leads |
 | Current Phase | Milestone 6 — Frontend Foundation |
-| Current Status | Milestone 5 backend complete (Batches 1–4). Frontend foundation + E2E verification complete (Batches 1–2). All 13 E2E checks pass. |
+| Current Status | Milestone 5 backend complete (Batches 1–4). Frontend foundation + E2E verification complete (Batches 1–2). UI/UX improvements complete (Batch 3). All 13 E2E checks pass. |
 | Last Verified | 2026-04-29 |
 
 ---
@@ -537,6 +537,46 @@ URLs: backend `http://localhost:5057` · frontend `http://localhost:3000`
 **Backend build:** `dotnet build` → **0 errors, 0 warnings** ✅
 **Frontend build:** `npm run build` → **compiled successfully** ✅
 
+### Batch 3 — Improve Lead Details and Outreach UI/UX ✅
+
+**Changed files:**
+- `frontend/app/(protected)/leads/page.tsx` — Leads list page
+- `frontend/app/(protected)/leads/[leadId]/page.tsx` — Lead detail + outreach page
+
+**Leads list page improvements:**
+- Loading spinner (SVG animate-spin) replaces plain "Loading…" text
+- Error displayed in bordered red box with border-red-200 styling
+- Status badges are now color-coded: New=blue, Contacted=amber, Qualified=green, Disqualified=red, fallback=gray
+- ICP score column is color-coded: ≥71=green, 41–70=amber, <41=red; null displays as "—"
+- Company column now shows job title as a secondary line (`block text-xs text-gray-400`)
+- Entire table row is clickable (`cursor-pointer` + `router.push`) — removed `<Link>` wrapper on name cell
+- Better empty state: two-line message with "No leads yet" + "Import leads to get started."
+- Table header has `bg-gray-50` tint for visual separation
+
+**Lead detail page improvements:**
+- Loading state uses same spinner component
+- Lead profile card has initials avatar (circle with `bg-gray-100`)
+- Job title + company shown as subtitle under name
+- Lead status badge is color-coded (same mapping as list page)
+- ICP score shown as large bold number with color + horizontal progress bar (0–100%)
+- Profile fields rendered conditionally — only non-null fields appear (industry, geography, companySize, revenueRange)
+- LinkedIn URL rendered as a clickable `<a>` link with `target="_blank"`
+- Notes field spans full grid width (`col-span-2 sm:col-span-3`)
+- Outreach messages count shown in section header ("Outreach (3)")
+- Generate Outreach button shows inline spinner while loading
+- Per-message `actionLoading: Record<string, boolean>` — each message's buttons disable independently
+- `Mark as Sent` button label changes to "Saving…" while the action is in flight
+- Auto-dismissing success notification (green box, 3-second timeout) after generate or status update
+- Outreach status badges color-coded: Draft=amber, Sent=green, Cancelled=gray
+- Empty state replaced with dashed-border card + descriptive copy
+- `sentAt` date displayed in green ("Sent …") when present
+
+**No backend changes. No new dependencies. No API contract changes.**
+
+**Build result:** `npm run build` → **compiled successfully**, 0 TypeScript errors, 0 lint errors ✅
+- `/leads` — 2.03 kB (was 1.78 kB)
+- `/leads/[leadId]` — 12.1 kB (was 4.32 kB)
+
 ---
 
 ## Milestone History
@@ -549,6 +589,6 @@ URLs: backend `http://localhost:5057` · frontend `http://localhost:3000`
 | Milestone 3 | Lead Import and Lead Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 4 | Lead Scoring and ICP Matching | Backend Complete ✅ (frontend deferred) |
 | Milestone 5 | AI-Assisted Outreach | Batch 1–4 Complete ✅ (backend + workflow contract) |
-| Milestone 6 | Frontend Foundation | Batch 1 + Batch 2 Complete ✅ |
+| Milestone 6 | Frontend Foundation | Batch 1 + Batch 2 + Batch 3 Complete ✅ |
 | Milestone 7 | Export and Notifications | Not Started |
 | Milestone 8 | Dashboard and Polish | Not Started |
