@@ -12,6 +12,7 @@ public class OutreachMessage
     public string Body { get; set; } = string.Empty;
     public OutreachStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? SentAt { get; set; }
 
     public Lead Lead { get; set; } = null!;
     public Workspace Workspace { get; set; } = null!;

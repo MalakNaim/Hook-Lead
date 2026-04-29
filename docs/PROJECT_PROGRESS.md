@@ -318,6 +318,31 @@
 - [x] `POST /leads/{id}/outreach/generate` `Disqualified` lead → 400 ✅
 - [x] `POST /leads/{id}/outreach/generate` `Unsubscribed` lead → 400 ✅
 
+### Batch 2 — Query Messages + Update Status ✅
+- [x] `OutreachMessage` entity updated — added `SentAt` (`DateTime?`) field
+- [x] `AddOutreachSentAt` EF Core migration generated and applied — adds nullable `SentAt` column to `OutreachMessages` table
+- [x] `OutreachMessageResult` DTO updated — added `SentAt` (`DateTime?`) parameter; `GenerateOutreachMessageCommandHandler` updated to pass `message.SentAt`
+- [x] `GetOutreachMessagesQuery` + `GetOutreachMessagesQueryHandler` — checks lead exists (404 if not), returns all messages scoped to current workspace sorted newest first
+- [x] `UpdateOutreachMessageStatusCommand` + `UpdateOutreachMessageStatusCommandHandler` — parses `OutreachStatus` enum (400 on invalid); sets `SentAt = UtcNow` on first transition to `Sent`; does not overwrite `SentAt` on subsequent status changes; 404 if message not in workspace
+- [x] `OutreachController` updated — two new endpoints:
+  - `GET /leads/{leadId}/outreach/messages` `[Authorize]` → 200 list / 404
+  - `PATCH /outreach/messages/{messageId}/status` `[Authorize]` → 200 / 400 / 404
+- [x] `GetOutreachMessagesQueryHandler` and `UpdateOutreachMessageStatusCommandHandler` registered in `DependencyInjection.cs`
+- [x] Build result: **0 errors, 0 warnings**
+- [x] `GET /leads/{id}/outreach/messages` unauthenticated → 401 ✅
+- [x] `GET /leads/{unknownId}/outreach/messages` → 404 ✅
+- [x] `GET /leads/{id}/outreach/messages` valid lead, no messages → 200 `[]` ✅
+- [x] `GET /leads/{id}/outreach/messages` after generate → 200 with 1 Draft, `sentAt: null` ✅
+- [x] `PATCH /outreach/messages/{id}/status` unauthenticated → 401 ✅
+- [x] `PATCH /outreach/messages/{unknownId}/status` → 404 ✅
+- [x] `PATCH /outreach/messages/{id}/status` invalid value → 400 with enum hint ✅
+- [x] `PATCH /outreach/messages/{id}/status` `Sent` → 200, `sentAt` populated with UTC timestamp ✅
+- [x] `PATCH /outreach/messages/{id}/status` `Cancelled` → 200, `sentAt` unchanged ✅
+- [x] `GET /leads/{id}/outreach/messages` reflects final status with `sentAt` preserved ✅
+- [x] Workspace isolation — WS2 user cannot see WS1 lead messages (404) ✅
+- [x] Workspace isolation — WS2 user cannot update WS1 message status (404) ✅
+- [x] Newest-first sort order verified with multiple messages ✅
+
 ---
 
 ## Milestone History
@@ -329,7 +354,7 @@
 | Milestone 2 | ICP Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 3 | Lead Import and Lead Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 4 | Lead Scoring and ICP Matching | Backend Complete ✅ (frontend deferred) |
-| Milestone 5 | AI-Assisted Outreach | Not Started |
+| Milestone 5 | AI-Assisted Outreach | Batch 1 + Batch 2 Complete ✅ |
 | Milestone 6 | Email Integration and Send Logs | Not Started |
 | Milestone 7 | Export and Notifications | Not Started |
 | Milestone 8 | Dashboard and Polish | Not Started |

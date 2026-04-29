@@ -28,6 +28,8 @@ using HookLeads.Application.Features.Import.ConfirmCsvImport;
 using HookLeads.Application.Features.Import.ImportLinkedInLead;
 using HookLeads.Application.Features.Import.ConfirmLinkedInImport;
 using HookLeads.Application.Features.Outreach.GenerateOutreachMessage;
+using HookLeads.Application.Features.Outreach.GetOutreachMessages;
+using HookLeads.Application.Features.Outreach.UpdateOutreachMessageStatus;
 using HookLeads.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -75,6 +77,8 @@ public static class DependencyInjection
         services.AddScoped<ConfirmLinkedInImportCommandHandler>();
 
         services.AddScoped<GenerateOutreachMessageCommandHandler>();
+        services.AddScoped<GetOutreachMessagesQueryHandler>();
+        services.AddScoped<UpdateOutreachMessageStatusCommandHandler>();
 
         return services;
     }

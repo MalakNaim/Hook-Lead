@@ -66,6 +66,7 @@ public class GenerateOutreachMessageCommandHandler
             message.Subject,
             message.Body,
             message.Status.ToString(),
-            message.CreatedAt);
+            message.CreatedAt,
+            message.SentAt);
     }
 }

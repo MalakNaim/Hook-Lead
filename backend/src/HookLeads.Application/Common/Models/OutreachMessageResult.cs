@@ -6,4 +6,5 @@ public record OutreachMessageResult(
     string Subject,
     string Body,
     string Status,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    DateTime? SentAt);
