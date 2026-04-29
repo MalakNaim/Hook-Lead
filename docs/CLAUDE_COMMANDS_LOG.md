@@ -157,6 +157,37 @@ A running log of prompts and instructions given to Claude Code during developmen
 **Bugs found:** None. One test probe used `"Contacted"` as status (not in enum); API rejected correctly with clear error — expected behavior, not a bug.
 **Output:** `PROJECT_PROGRESS.md` updated — Batch 5 Live Verification added; history table updated. Milestone 3 committed and pushed.
 
+## Session 11 — Milestone 4: Lead Scoring and ICP Matching (Batches 1–4)
+**Date:** 2026-04-29
+**Summary:** Implemented the full Lead Scoring backend (Milestone 4) across four batches. Batch 1 extended the `Lead` entity with `IcpScore` and `ScoreBreakdown` and generated the `AddLeadScoring` migration. Batch 2 built the application-layer scoring service and wired it into all import and ICP mutation flows. Batch 3 added the two scoring API endpoints. Batch 4 ran full live verification, fixed a security issue in `appsettings.json`, and committed.
+
+**Key design decisions:**
+- **Score formula:** `round(matchedWeight / totalWeight × 100)` — produces a 0–100 integer representing the percentage of possible ICP weight matched
+- **Matching:** case-insensitive string equality after trim; five criterion types map to lead fields (`Industry`, `CompanySize`, `JobTitle`, `Geography`, `RevenueRange`)
+- **Score is null** when no active ICP profile exists or when the active profile has no criteria — deferred scoring, not zero
+- **Breakdown stored as JSON** (camelCase) in `ScoreBreakdown`; deserialized into `JsonElement` at API layer so the response contains a native JSON array rather than an escaped string
+- **Rescoring triggers:** adding/updating/deleting a criterion on the active profile; toggling a profile's `IsActive` state; importing a new lead (scored at insert time)
+
+**Output:**
+- **New — Domain:** `Lead.IcpScore` (`int?`), `Lead.ScoreBreakdown` (`string?`)
+- **New — Infrastructure:** `LeadConfiguration` update (ScoreBreakdown nvarchar(max)); migration `AddLeadScoring`
+- **New — Application:** `ILeadScoringService` interface; `LeadScoringService` (`Application/Services/`); `LeadScoreResult` DTO; `GetLeadScoreQuery` + handler (`Features/Leads/GetLeadScore/`)
+- **Modified — Application:** `DependencyInjection.cs` (registered service + handler); `ConfirmCsvImportCommandHandler`; `ConfirmLinkedInImportCommandHandler`; `AddIcpCriterionCommandHandler`; `UpdateIcpCriterionCommandHandler`; `DeleteIcpCriterionCommandHandler`; `UpdateIcpProfileCommandHandler` (replaced Milestone 4 placeholder)
+- **New — Api:** `Controllers/ScoringController.cs` (`GET /leads/{id}/score`, `POST /scoring/recalculate`)
+- **Security fix:** `appsettings.json` reverted to `Password=CHANGE_ME`; real dev credentials live only in `appsettings.Development.json`
+- **Build result:** 0 errors, 0 warnings (all 4 batches)
+
+**Live verification results (Batch 4):**
+1. `dotnet build` → 0 errors, 0 warnings ✅
+2. SQL Server reachable; 4 migrations applied ✅
+3. `IcpScore` + `ScoreBreakdown` columns confirmed via `sys.columns` ✅
+4. Unauth `GET /leads/{id}/score` → 401 ✅
+5. Admin `GET /leads/{id}/score` (known) → 200 `{score:null}` (correct — no ICP yet) ✅
+6. Admin `GET /leads/{id}/score` (unknown) → 404 ✅
+7. Unauth `POST /scoring/recalculate` → 401 ✅
+8. Rep `POST /scoring/recalculate` → 403 ✅
+9. Admin `POST /scoring/recalculate` → 202 ✅
+
 ## Future Commands
 
 <!-- Add new entries here as development continues. Use the format above. -->

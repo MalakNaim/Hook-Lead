@@ -21,6 +21,7 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(l => l.RevenueRange).HasMaxLength(100);
         builder.Property(l => l.LinkedInUrl).HasMaxLength(500);
         builder.Property(l => l.Notes).HasMaxLength(5000);
+        builder.Property(l => l.ScoreBreakdown).HasColumnType("nvarchar(max)");
 
         builder.Property(l => l.Source)
             .HasConversion<string>()

@@ -9,10 +9,12 @@ namespace HookLeads.Application.Features.Icp.UpdateIcpCriterion;
 public class UpdateIcpCriterionCommandHandler
 {
     private readonly IApplicationDbContext _context;
+    private readonly ILeadScoringService _scoringService;
 
-    public UpdateIcpCriterionCommandHandler(IApplicationDbContext context)
+    public UpdateIcpCriterionCommandHandler(IApplicationDbContext context, ILeadScoringService scoringService)
     {
         _context = context;
+        _scoringService = scoringService;
     }
 
     public async Task<IcpCriterionResult> Handle(UpdateIcpCriterionCommand command, Guid profileId, Guid criterionId, CancellationToken cancellationToken = default)
@@ -41,6 +43,9 @@ public class UpdateIcpCriterionCommandHandler
         profile.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (profile.IsActive)
+            await _scoringService.RescoreWorkspaceLeadsAsync(cancellationToken);
 
         return new IcpCriterionResult(criterion.Id, criterion.CriterionType.ToString(), criterion.Value, criterion.Weight);
     }

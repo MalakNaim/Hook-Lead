@@ -11,11 +11,16 @@ public class ConfirmLinkedInImportCommandHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentWorkspaceService _currentWorkspace;
+    private readonly ILeadScoringService _scoringService;
 
-    public ConfirmLinkedInImportCommandHandler(IApplicationDbContext context, ICurrentWorkspaceService currentWorkspace)
+    public ConfirmLinkedInImportCommandHandler(
+        IApplicationDbContext context,
+        ICurrentWorkspaceService currentWorkspace,
+        ILeadScoringService scoringService)
     {
         _context = context;
         _currentWorkspace = currentWorkspace;
+        _scoringService = scoringService;
     }
 
     public async Task<LeadResult> Handle(ConfirmLinkedInImportCommand command, CancellationToken cancellationToken = default)
@@ -28,6 +33,10 @@ public class ConfirmLinkedInImportCommandHandler
 
         if (duplicate)
             throw new AppException("A lead with this email already exists in this workspace.", 409);
+
+        var activeProfile = await _context.IcpProfiles
+            .Include(p => p.Criteria)
+            .FirstOrDefaultAsync(p => p.IsActive, cancellationToken);
 
         var lead = new Lead
         {
@@ -47,6 +56,13 @@ public class ConfirmLinkedInImportCommandHandler
             Status = LeadStatus.New,
             ImportedAt = DateTime.UtcNow
         };
+
+        if (activeProfile != null && activeProfile.Criteria.Any())
+        {
+            var (score, breakdown) = _scoringService.CalculateScore(lead, activeProfile);
+            lead.IcpScore = score;
+            lead.ScoreBreakdown = breakdown;
+        }
 
         _context.Leads.Add(lead);
         await _context.SaveChangesAsync(cancellationToken);

@@ -19,6 +19,8 @@ public class Lead
     public LeadSource Source { get; set; }
     public LeadStatus Status { get; set; }
     public string? Notes { get; set; }
+    public int? IcpScore { get; set; }
+    public string? ScoreBreakdown { get; set; }
     public DateTime ImportedAt { get; set; }
     public Workspace Workspace { get; set; } = null!;
 }

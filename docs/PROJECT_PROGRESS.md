@@ -5,8 +5,8 @@
 | Field | Value |
 |---|---|
 | Project Name | Hook Leads |
-| Current Phase | Milestone 4 — Lead Scoring and ICP Matching |
-| Current Status | Milestone 3 backend complete and live-verified. All 25 checks passed. Ready for Milestone 4. |
+| Current Phase | Milestone 5 — AI-Assisted Outreach |
+| Current Status | Milestone 4 backend complete and live-verified. All 6 scoring endpoint checks passed. Ready for Milestone 5. |
 | Last Verified | 2026-04-29 |
 
 ---
@@ -228,15 +228,69 @@
 
 ---
 
+---
+
+## Milestone 4 — Lead Scoring and ICP Matching
+
+### Batch 1 — Domain + Migration ✅
+- [x] `Lead` entity updated — added `IcpScore` (`int?`) and `ScoreBreakdown` (`string?`) fields
+- [x] `LeadConfiguration` updated — `ScoreBreakdown` mapped as `nvarchar(max)` nullable
+- [x] EF Core migration `AddLeadScoring` generated — adds `IcpScore` (int, nullable) and `ScoreBreakdown` (nvarchar(max), nullable) to `Leads` table
+- [x] Migration applied to SQL Server — `Leads` table has 18 columns (16 original + 2 scoring)
+- [x] Build result: **0 errors, 0 warnings**
+
+### Batch 2 — Application Scoring Service ✅
+- [x] `ILeadScoringService` interface created — two methods:
+  - `CalculateScore(Lead, IcpProfile)` → `(int score, string breakdown)` — pure, no DB
+  - `RescoreWorkspaceLeadsAsync(CancellationToken)` — queries active ICP, rescores all workspace leads, saves
+- [x] `LeadScoringService` implementation created in `Application/Services/`
+  - **Scoring formula:** `round(matchedWeight / totalWeight × 100)` → 0–100 integer
+  - **Matching:** case-insensitive string equality after trim on lead field vs criterion value
+  - **CriterionType → Lead field mapping:** `Industry`, `CompanySize`, `JobTitle`, `Geography`, `RevenueRange`
+  - **ScoreBreakdown JSON:** camelCase array of `{criterionType, targetValue, leadValue, weight, matched}` per criterion
+  - **No active ICP or no criteria:** `IcpScore = null`, `ScoreBreakdown = null`
+- [x] `ConfirmCsvImportCommandHandler` updated — queries active ICP before loop; scores each new lead before `SaveChanges`
+- [x] `ConfirmLinkedInImportCommandHandler` updated — same; scores the single new lead
+- [x] `AddIcpCriterionCommandHandler` updated — calls `RescoreWorkspaceLeadsAsync` after save if profile `IsActive`
+- [x] `UpdateIcpCriterionCommandHandler` updated — same
+- [x] `DeleteIcpCriterionCommandHandler` updated — same
+- [x] `UpdateIcpProfileCommandHandler` updated — replaces Milestone 4 placeholder log; calls `RescoreWorkspaceLeadsAsync` whenever `IsActive` changes direction
+- [x] `Application/DependencyInjection.cs` — `ILeadScoringService` registered as scoped
+- [x] Build result: **0 errors, 0 warnings**
+
+### Batch 3 — API Endpoints ✅
+- [x] `LeadScoreResult` DTO created — `(Guid LeadId, int? Score, object? Breakdown)`
+- [x] `GetLeadScoreQuery` + `GetLeadScoreQueryHandler` created — fetches lead via workspace-scoped context; throws 404 if absent; deserializes `ScoreBreakdown` string into `JsonElement` for native JSON response
+- [x] `ScoringController` created — two endpoints:
+  - `GET /leads/{id}/score` — `[Authorize]` → 200 with `LeadScoreResult` / 401 unauth / 404 not found
+  - `POST /scoring/recalculate` — `[Authorize(Roles="Admin")]` → 202 Accepted / 401 unauth / 403 non-Admin
+- [x] `GetLeadScoreQueryHandler` registered in `Application/DependencyInjection.cs`
+- [x] Build result: **0 errors, 0 warnings**
+
+### Batch 4 — Verification + Commit ✅
+- [x] `dotnet build` — **0 errors, 0 warnings**
+- [x] SQL Server reachable; all 4 migrations applied (`InitialCreate`, `AddIcpManagement`, `AddLeadManagement`, `AddLeadScoring`)
+- [x] `Leads` table has `IcpScore` (int, nullable) and `ScoreBreakdown` (nvarchar(max), nullable) — verified via `sys.columns`
+- [x] `GET /leads/{id}/score` unauthenticated → 401 ✅
+- [x] `GET /leads/{id}/score` admin (known lead) → 200 `{leadId, score:null, breakdown:null}` ✅ (null correct — no active ICP yet)
+- [x] `GET /leads/{id}/score` admin (unknown lead) → 404 ✅
+- [x] `POST /scoring/recalculate` unauthenticated → 401 ✅
+- [x] `POST /scoring/recalculate` Rep (non-Admin) → 403 ✅
+- [x] `POST /scoring/recalculate` Admin → 202 ✅
+- [x] Security cleanup: `appsettings.json` reverted to `Password=CHANGE_ME` placeholder; real development credentials stay only in `appsettings.Development.json` (already tracked — credentials mirror docker-compose.yml default, no new exposure)
+- [x] Milestone 4 committed
+
+---
+
 ## Milestone History
 
 | Milestone | Description | Status |
 |---|---|---|
-| Milestone 0 | Project Foundation | Complete |
+| Milestone 0 | Project Foundation | Complete ✅ |
 | Milestone 1 | Authentication and Workspace | Complete ✅ |
 | Milestone 2 | ICP Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 3 | Lead Import and Lead Management | Backend Complete ✅ (frontend deferred) |
-| Milestone 4 | Lead Scoring and ICP Matching | Not Started |
+| Milestone 4 | Lead Scoring and ICP Matching | Backend Complete ✅ (frontend deferred) |
 | Milestone 5 | AI-Assisted Outreach | Not Started |
 | Milestone 6 | Email Integration and Send Logs | Not Started |
 | Milestone 7 | Export and Notifications | Not Started |

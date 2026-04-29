@@ -11,11 +11,16 @@ public class ConfirmCsvImportCommandHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentWorkspaceService _currentWorkspace;
+    private readonly ILeadScoringService _scoringService;
 
-    public ConfirmCsvImportCommandHandler(IApplicationDbContext context, ICurrentWorkspaceService currentWorkspace)
+    public ConfirmCsvImportCommandHandler(
+        IApplicationDbContext context,
+        ICurrentWorkspaceService currentWorkspace,
+        ILeadScoringService scoringService)
     {
         _context = context;
         _currentWorkspace = currentWorkspace;
+        _scoringService = scoringService;
     }
 
     public async Task<ImportSummaryResult> Handle(ConfirmCsvImportCommand command, CancellationToken cancellationToken = default)
@@ -24,6 +29,10 @@ public class ConfirmCsvImportCommandHandler
             throw new AppException("No rows provided for import.", 400);
 
         var workspaceId = _currentWorkspace.WorkspaceId!.Value;
+
+        var activeProfile = await _context.IcpProfiles
+            .Include(p => p.Criteria)
+            .FirstOrDefaultAsync(p => p.IsActive, cancellationToken);
 
         var existingEmails = (await _context.Leads
             .Select(l => l.Email.ToLower())
@@ -62,6 +71,13 @@ public class ConfirmCsvImportCommandHandler
                 Status = LeadStatus.New,
                 ImportedAt = now
             };
+
+            if (activeProfile != null && activeProfile.Criteria.Any())
+            {
+                var (score, breakdown) = _scoringService.CalculateScore(lead, activeProfile);
+                lead.IcpScore = score;
+                lead.ScoreBreakdown = breakdown;
+            }
 
             _context.Leads.Add(lead);
             existingEmails.Add(email);

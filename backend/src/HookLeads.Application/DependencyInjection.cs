@@ -1,4 +1,5 @@
 using FluentValidation;
+using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Features.Auth.ForgotPassword;
 using HookLeads.Application.Features.Auth.Login;
 using HookLeads.Application.Features.Auth.Logout;
@@ -17,6 +18,7 @@ using HookLeads.Application.Features.Icp.UpdateIcpCriterion;
 using HookLeads.Application.Features.Icp.DeleteIcpCriterion;
 using HookLeads.Application.Features.Leads.GetLeads;
 using HookLeads.Application.Features.Leads.GetLeadById;
+using HookLeads.Application.Features.Leads.GetLeadScore;
 using HookLeads.Application.Features.Leads.UpdateLead;
 using HookLeads.Application.Features.Leads.DeleteLead;
 using HookLeads.Application.Features.Leads.UpdateLeadStatus;
@@ -25,6 +27,7 @@ using HookLeads.Application.Features.Import.ImportLeadsCsv;
 using HookLeads.Application.Features.Import.ConfirmCsvImport;
 using HookLeads.Application.Features.Import.ImportLinkedInLead;
 using HookLeads.Application.Features.Import.ConfirmLinkedInImport;
+using HookLeads.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HookLeads.Application;
@@ -34,6 +37,8 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+
+        services.AddScoped<ILeadScoringService, LeadScoringService>();
 
         services.AddScoped<RegisterCommandHandler>();
         services.AddScoped<LoginCommandHandler>();
@@ -56,6 +61,7 @@ public static class DependencyInjection
 
         services.AddScoped<GetLeadsQueryHandler>();
         services.AddScoped<GetLeadByIdQueryHandler>();
+        services.AddScoped<GetLeadScoreQueryHandler>();
         services.AddScoped<UpdateLeadCommandHandler>();
         services.AddScoped<DeleteLeadCommandHandler>();
         services.AddScoped<UpdateLeadStatusCommandHandler>();

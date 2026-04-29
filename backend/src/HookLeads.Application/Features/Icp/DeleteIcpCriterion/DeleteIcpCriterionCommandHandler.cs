@@ -7,10 +7,12 @@ namespace HookLeads.Application.Features.Icp.DeleteIcpCriterion;
 public class DeleteIcpCriterionCommandHandler
 {
     private readonly IApplicationDbContext _context;
+    private readonly ILeadScoringService _scoringService;
 
-    public DeleteIcpCriterionCommandHandler(IApplicationDbContext context)
+    public DeleteIcpCriterionCommandHandler(IApplicationDbContext context, ILeadScoringService scoringService)
     {
         _context = context;
+        _scoringService = scoringService;
     }
 
     public async Task Handle(Guid profileId, Guid criterionId, CancellationToken cancellationToken = default)
@@ -32,5 +34,8 @@ public class DeleteIcpCriterionCommandHandler
         profile.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (profile.IsActive)
+            await _scoringService.RescoreWorkspaceLeadsAsync(cancellationToken);
     }
 }

@@ -2,21 +2,20 @@ using HookLeads.Application.Common.Exceptions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace HookLeads.Application.Features.Icp.UpdateIcpProfile;
 
 public class UpdateIcpProfileCommandHandler
 {
     private readonly IApplicationDbContext _context;
-    private readonly ILogger<UpdateIcpProfileCommandHandler> _logger;
+    private readonly ILeadScoringService _scoringService;
 
     public UpdateIcpProfileCommandHandler(
         IApplicationDbContext context,
-        ILogger<UpdateIcpProfileCommandHandler> logger)
+        ILeadScoringService scoringService)
     {
         _context = context;
-        _logger = logger;
+        _scoringService = scoringService;
     }
 
     public async Task<IcpProfileResult> Handle(UpdateIcpProfileCommand command, Guid profileId, CancellationToken cancellationToken = default)
@@ -27,6 +26,8 @@ public class UpdateIcpProfileCommandHandler
 
         if (profile == null)
             throw new AppException("ICP profile not found.", 404);
+
+        var wasActive = profile.IsActive;
 
         if (command.IsActive && !profile.IsActive)
         {
@@ -45,10 +46,8 @@ public class UpdateIcpProfileCommandHandler
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // Rescore job placeholder — full implementation in Milestone 4.
-        _logger.LogInformation(
-            "ICP profile '{Name}' ({Id}) updated. Rescore job will be implemented in Milestone 4.",
-            profile.Name, profile.Id);
+        if (wasActive != profile.IsActive)
+            await _scoringService.RescoreWorkspaceLeadsAsync(cancellationToken);
 
         var criteria = profile.Criteria
             .Select(c => new IcpCriterionResult(c.Id, c.CriterionType.ToString(), c.Value, c.Weight))
