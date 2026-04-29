@@ -48,6 +48,15 @@ try
 
     builder.Services.AddAuthorization();
 
+    // ── CORS ──────────────────────────────────────────────────────────────────
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("Frontend", policy =>
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod());
+    });
+
     // ── HTTP context + Http-scoped identity services ───────────────────────────
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -96,6 +105,7 @@ try
     var app = builder.Build();
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();
+    app.UseCors("Frontend");
 
     if (app.Environment.IsDevelopment())
     {

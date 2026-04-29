@@ -6,7 +6,7 @@
 |---|---|
 | Project Name | Hook Leads |
 | Current Phase | Milestone 6 — Frontend Foundation |
-| Current Status | Milestone 5 backend complete (Batches 1–4). Frontend foundation added in Milestone 6 Batch 1. |
+| Current Status | Milestone 5 backend complete (Batches 1–4). Frontend foundation + E2E verification complete (Batches 1–2). All 13 E2E checks pass. |
 | Last Verified | 2026-04-29 |
 
 ---
@@ -488,6 +488,55 @@ frontend/
 - Routes: `/` (static redirect), `/login` (static), `/leads` (static), `/leads/[leadId]` (dynamic), `/_not-found`
 - Middleware compiled: 26.6 kB
 
+### Batch 2 — End-to-End Local Verification ✅
+
+**Issue found and fixed:** Backend had no CORS policy — every browser `fetch` from `http://localhost:3000` was blocked at preflight.
+
+**Fix:** Added `AddCors` + `UseCors("Frontend")` to `backend/src/HookLeads.Api/Program.cs` allowing `http://localhost:3000`. CORS is placed before `UseAuthentication` in the middleware pipeline.
+
+**Launch commands:**
+```bash
+# 1. SQL Server
+docker compose up -d
+
+# 2. Backend  (from /backend)
+dotnet run --project src/HookLeads.Api
+
+# 3. Frontend  (from /frontend)
+npm run dev
+```
+URLs: backend `http://localhost:5057` · frontend `http://localhost:3000`
+
+**E2E verification checklist (13/13 passed):**
+
+| # | Check | Result |
+|---|---|---|
+| 1 | `GET /` (no cookie) → 307 redirect to `/login` | ✅ |
+| 2 | `GET /login` → 200 renders | ✅ |
+| 3 | `GET /leads` (no cookie) → 307 redirect to `/login` | ✅ |
+| 4 | `POST /login` with CORS Origin header → 200 + JWT | ✅ |
+| 5 | `GET /leads` with token + CORS Origin → 200 list | ✅ |
+| 6 | `GET /leads/{id}` → 200 lead detail | ✅ |
+| 7 | `GET /leads/{id}/outreach/messages` → 200 message list | ✅ |
+| 8 | `POST /leads/{id}/outreach/generate` → 201 Draft created | ✅ |
+| 9 | `GET /outreach/messages/{id}/email-draft` → 200 mailtoUrl | ✅ |
+| 10 | `PATCH /outreach/messages/{id}/status` `Sent` → 200 + sentAt set | ✅ |
+| 11 | `PATCH /outreach/messages/{id}/status` `Cancelled` → 200 | ✅ |
+| 12 | Next.js `/leads` page renders (with cookie) → 200 | ✅ |
+| 13 | Next.js `/leads/{id}` page renders (with cookie) → 200 | ✅ |
+
+**Remaining for full browser manual testing:**
+- Open `http://localhost:3000/login` in browser, sign in with `outreach2@test.com` / `Test1234!`
+- Verify leads table loads and shows Jane Smith
+- Verify lead detail shows outreach messages
+- Click "Generate Draft" and verify new Draft appears
+- Click "Open Email Draft" — browser opens `mailto:` in email client
+- Click "Mark as Sent" — message status updates to Sent with sentAt
+- Click "Cancel" — message status updates to Cancelled
+
+**Backend build:** `dotnet build` → **0 errors, 0 warnings** ✅
+**Frontend build:** `npm run build` → **compiled successfully** ✅
+
 ---
 
 ## Milestone History
@@ -500,6 +549,6 @@ frontend/
 | Milestone 3 | Lead Import and Lead Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 4 | Lead Scoring and ICP Matching | Backend Complete ✅ (frontend deferred) |
 | Milestone 5 | AI-Assisted Outreach | Batch 1–4 Complete ✅ (backend + workflow contract) |
-| Milestone 6 | Frontend Foundation | Batch 1 Complete ✅ |
+| Milestone 6 | Frontend Foundation | Batch 1 + Batch 2 Complete ✅ |
 | Milestone 7 | Export and Notifications | Not Started |
 | Milestone 8 | Dashboard and Polish | Not Started |
