@@ -20,6 +20,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<IcpProfile> IcpProfiles => Set<IcpProfile>();
     public DbSet<IcpCriterion> IcpCriteria => Set<IcpCriterion>();
     public DbSet<Lead> Leads => Set<Lead>();
+    public DbSet<OutreachMessage> OutreachMessages => Set<OutreachMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,5 +43,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
 
         modelBuilder.Entity<Lead>().HasQueryFilter(l =>
             _workspaceService.WorkspaceId == null || l.WorkspaceId == _workspaceService.WorkspaceId.Value);
+
+        modelBuilder.Entity<OutreachMessage>().HasQueryFilter(m =>
+            _workspaceService.WorkspaceId == null || m.WorkspaceId == _workspaceService.WorkspaceId.Value);
     }
 }

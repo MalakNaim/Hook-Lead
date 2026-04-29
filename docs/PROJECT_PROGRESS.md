@@ -294,6 +294,32 @@
 
 ---
 
+---
+
+## Milestone 5 — AI-Assisted Outreach
+
+### Batch 1 — Domain + Infrastructure + Generate Endpoint ✅
+- [x] `OutreachStatus` enum created (`Draft`, `Sent`, `Cancelled`)
+- [x] `OutreachMessage` entity created — `Id`, `LeadId`, `WorkspaceId`, `GeneratedBy`, `Subject`, `Body`, `Status`, `CreatedAt` + nav props to `Lead`, `Workspace`, `User`
+- [x] `OutreachMessageConfiguration` — Subject max 500; Body `nvarchar(max)`; Status stored as string; cascade delete on LeadId FK; NoAction on WorkspaceId and GeneratedBy FKs
+- [x] `AppDbContext` — added `OutreachMessages` DbSet + workspace-scoped global query filter
+- [x] `IApplicationDbContext` — added `OutreachMessages` property
+- [x] `AddOutreachMessages` EF Core migration generated and applied — `OutreachMessages` table has 8 columns, all non-nullable
+- [x] `IOutreachDraftService` interface — `GenerateDraft(Lead)` → `(subject, body)`
+- [x] `OutreachDraftService` placeholder implementation — template fills `FirstName`, `Company`, `JobTitle`, `Industry`, `IcpScore` (score note branch on score presence)
+- [x] `OutreachMessageResult` DTO — `Id`, `LeadId`, `Subject`, `Body`, `Status`, `CreatedAt`
+- [x] `GenerateOutreachMessageCommand` + `GenerateOutreachMessageCommandHandler` — loads lead via workspace-scoped context; blocks `Disqualified` and `Unsubscribed`; persists `Draft` message; returns DTO
+- [x] `OutreachController` — `POST /leads/{leadId}/outreach/generate` `[Authorize]` → 201
+- [x] `IOutreachDraftService` and `GenerateOutreachMessageCommandHandler` registered in `DependencyInjection.cs`
+- [x] Build result: **0 errors, 0 warnings**
+- [x] `POST /leads/{id}/outreach/generate` unauthenticated → 401 ✅
+- [x] `POST /leads/{id}/outreach/generate` valid `New` lead (score=100) → 201 with subject, body, `status:"Draft"` ✅
+- [x] `POST /leads/{id}/outreach/generate` unknown lead → 404 ✅
+- [x] `POST /leads/{id}/outreach/generate` `Disqualified` lead → 400 ✅
+- [x] `POST /leads/{id}/outreach/generate` `Unsubscribed` lead → 400 ✅
+
+---
+
 ## Milestone History
 
 | Milestone | Description | Status |

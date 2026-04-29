@@ -27,6 +27,7 @@ using HookLeads.Application.Features.Import.ImportLeadsCsv;
 using HookLeads.Application.Features.Import.ConfirmCsvImport;
 using HookLeads.Application.Features.Import.ImportLinkedInLead;
 using HookLeads.Application.Features.Import.ConfirmLinkedInImport;
+using HookLeads.Application.Features.Outreach.GenerateOutreachMessage;
 using HookLeads.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -39,6 +40,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
         services.AddScoped<ILeadScoringService, LeadScoringService>();
+        services.AddScoped<IOutreachDraftService, OutreachDraftService>();
 
         services.AddScoped<RegisterCommandHandler>();
         services.AddScoped<LoginCommandHandler>();
@@ -71,6 +73,8 @@ public static class DependencyInjection
         services.AddScoped<ConfirmCsvImportCommandHandler>();
         services.AddScoped<ImportLinkedInLeadCommandHandler>();
         services.AddScoped<ConfirmLinkedInImportCommandHandler>();
+
+        services.AddScoped<GenerateOutreachMessageCommandHandler>();
 
         return services;
     }

@@ -11,5 +11,6 @@ public interface IApplicationDbContext
     DbSet<IcpProfile> IcpProfiles { get; }
     DbSet<IcpCriterion> IcpCriteria { get; }
     DbSet<Lead> Leads { get; }
+    DbSet<OutreachMessage> OutreachMessages { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
