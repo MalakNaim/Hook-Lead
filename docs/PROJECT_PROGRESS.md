@@ -343,6 +343,22 @@
 - [x] Workspace isolation — WS2 user cannot update WS1 message status (404) ✅
 - [x] Newest-first sort order verified with multiple messages ✅
 
+### Batch 3 — Click-to-Send Email Draft Endpoint ✅
+- [x] `GetOutreachEmailDraftQuery` + `GetOutreachEmailDraftQueryHandler` — loads message with `Lead` navigation included; 404 if not in workspace; 400 if message is Cancelled; 400 if lead email is missing/empty; falls back to default subject if `OutreachMessage.Subject` is empty
+- [x] `OutreachEmailDraftResult` DTO — `To`, `Subject`, `Body`, `MailtoUrl`
+- [x] mailto URL built with `Uri.EscapeDataString` on subject and body; email address placed unencoded per RFC; newlines encoded as `%0A`; round-trip verified (decode → original body)
+- [x] `OutreachController` updated — `GET /outreach/messages/{messageId}/email-draft` `[Authorize]` → 200 / 400 / 404
+- [x] `GetOutreachEmailDraftQueryHandler` registered in `DependencyInjection.cs`
+- [x] Build result: **0 errors, 0 warnings**
+- [x] `GET /outreach/messages/{id}/email-draft` unauthenticated → 401 ✅
+- [x] Unknown message → 404 ✅
+- [x] Cancelled message → 400 `"Cannot generate email draft for a cancelled message."` ✅
+- [x] Valid Draft message → 200 with `to`, `subject`, `body`, `mailtoUrl` all present ✅
+- [x] Workspace isolation — WS2 token cannot access WS1 message → 404 ✅
+- [x] Lead with blank email → 400 `"Lead does not have an email address."` ✅
+- [x] `mailtoUrl` encodes and decodes correctly — subject and body round-trip clean ✅
+- [x] No SMTP/real email sending — backend returns only the mailto-ready link ✅
+
 ---
 
 ## Milestone History
@@ -354,7 +370,7 @@
 | Milestone 2 | ICP Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 3 | Lead Import and Lead Management | Backend Complete ✅ (frontend deferred) |
 | Milestone 4 | Lead Scoring and ICP Matching | Backend Complete ✅ (frontend deferred) |
-| Milestone 5 | AI-Assisted Outreach | Batch 1 + Batch 2 Complete ✅ |
+| Milestone 5 | AI-Assisted Outreach | Batch 1 + Batch 2 + Batch 3 Complete ✅ |
 | Milestone 6 | Email Integration and Send Logs | Not Started |
 | Milestone 7 | Export and Notifications | Not Started |
 | Milestone 8 | Dashboard and Polish | Not Started |
