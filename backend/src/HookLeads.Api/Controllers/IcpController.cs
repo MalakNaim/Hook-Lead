@@ -1,5 +1,5 @@
 using FluentValidation;
-using HookLeads.Application.Common.Interfaces;
+using HookLeads.Application.Common.Exceptions;
 using HookLeads.Application.Features.Icp.AddIcpCriterion;
 using HookLeads.Application.Features.Icp.CreateIcpProfile;
 using HookLeads.Application.Features.Icp.DeleteIcpCriterion;
@@ -48,9 +48,8 @@ public class IcpController : ControllerBase
         [FromServices] GetActiveIcpProfileQueryHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.Handle(new GetActiveIcpProfileQuery(), cancellationToken);
-        if (result == null)
-            return NotFound(new { message = "No active ICP profile found." });
+        var result = await handler.Handle(new GetActiveIcpProfileQuery(), cancellationToken)
+            ?? throw new AppException("No active ICP profile found.", 404);
         return Ok(result);
     }
 

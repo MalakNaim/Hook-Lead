@@ -22,14 +22,15 @@ public class WorkspaceController : ControllerBase
         _currentWorkspace = currentWorkspace;
     }
 
+    private Guid RequiredWorkspaceId =>
+        _currentWorkspace.WorkspaceId ?? throw new AppException("Workspace context is required.", 401);
+
     [HttpGet]
     public async Task<IActionResult> GetWorkspace(
         [FromServices] GetWorkspaceQueryHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.Handle(
-            new GetWorkspaceQuery(_currentWorkspace.WorkspaceId ?? throw new AppException("Workspace context is required.", 401)),
-            cancellationToken);
+        var result = await handler.Handle(new GetWorkspaceQuery(RequiredWorkspaceId), cancellationToken);
         return Ok(result);
     }
 
@@ -38,9 +39,7 @@ public class WorkspaceController : ControllerBase
         [FromServices] GetWorkspaceMembersQueryHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.Handle(
-            new GetWorkspaceMembersQuery(_currentWorkspace.WorkspaceId ?? throw new AppException("Workspace context is required.", 401)),
-            cancellationToken);
+        var result = await handler.Handle(new GetWorkspaceMembersQuery(RequiredWorkspaceId), cancellationToken);
         return Ok(result);
     }
 
@@ -53,7 +52,7 @@ public class WorkspaceController : ControllerBase
         CancellationToken cancellationToken)
     {
         await validator.ValidateAndThrowAsync(command, cancellationToken);
-        await handler.Handle(command, _currentWorkspace.WorkspaceId ?? throw new AppException("Workspace context is required.", 401), cancellationToken);
+        await handler.Handle(command, RequiredWorkspaceId, cancellationToken);
         return Ok();
     }
 

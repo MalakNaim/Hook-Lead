@@ -1,10 +1,7 @@
+import { getAccessToken } from '@/lib/auth';
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5057';
-
-function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('hl_access_token');
-}
 
 export class ApiError extends Error {
   constructor(
@@ -20,7 +17,7 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const token = getToken();
+  const token = getAccessToken();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

@@ -1,3 +1,15 @@
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  userId: string;
+  email: string;
+  role: string;
+  workspaceId: string;
+  workspaceName: string;
+}
+
 // ── Shared ────────────────────────────────────────────────────────────────────
 
 export interface PagedResult<T> {

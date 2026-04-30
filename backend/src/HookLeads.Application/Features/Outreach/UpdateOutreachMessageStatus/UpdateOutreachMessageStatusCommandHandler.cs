@@ -1,4 +1,5 @@
 using HookLeads.Application.Common.Exceptions;
+using HookLeads.Application.Common.Extensions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Common.Models;
 using HookLeads.Domain.Enums;
@@ -35,13 +36,6 @@ public class UpdateOutreachMessageStatusCommandHandler
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new OutreachMessageResult(
-            message.Id,
-            message.LeadId,
-            message.Subject,
-            message.Body,
-            message.Status.ToString(),
-            message.CreatedAt,
-            message.SentAt);
+        return message.ToOutreachMessageResult();
     }
 }

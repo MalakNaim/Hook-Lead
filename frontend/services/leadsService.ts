@@ -20,9 +20,9 @@ export async function getLeads(
   if (params.maxScore !== undefined) qs.set('maxScore', String(params.maxScore));
 
   const query = qs.toString() ? `?${qs.toString()}` : '';
-  return apiFetch<PagedResult<LeadSummary>>(`/leads${query}`);
+  return apiFetch<PagedResult<LeadSummary>>(`/api/leads${query}`);
 }
 
 export async function getLeadById(leadId: string): Promise<Lead> {
-  return apiFetch<Lead>(`/leads/${leadId}`);
+  return apiFetch<Lead>(`/api/leads/${leadId}`);
 }

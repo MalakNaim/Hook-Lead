@@ -8,13 +8,13 @@ import type {
 export async function getOutreachMessages(
   leadId: string,
 ): Promise<OutreachMessage[]> {
-  return apiFetch<OutreachMessage[]>(`/leads/${leadId}/outreach/messages`);
+  return apiFetch<OutreachMessage[]>(`/api/outreach/leads/${leadId}/messages`);
 }
 
 export async function generateOutreachMessage(
   leadId: string,
 ): Promise<OutreachMessage> {
-  return apiFetch<OutreachMessage>(`/leads/${leadId}/outreach/generate`, {
+  return apiFetch<OutreachMessage>(`/api/outreach/leads/${leadId}/generate`, {
     method: 'POST',
   });
 }
@@ -23,7 +23,7 @@ export async function getOutreachEmailDraft(
   messageId: string,
 ): Promise<OutreachEmailDraftResult> {
   return apiFetch<OutreachEmailDraftResult>(
-    `/outreach/messages/${messageId}/email-draft`,
+    `/api/outreach/messages/${messageId}/email-draft`,
   );
 }
 
@@ -32,7 +32,7 @@ export async function updateOutreachMessageStatus(
   status: OutreachStatus,
 ): Promise<OutreachMessage> {
   return apiFetch<OutreachMessage>(
-    `/outreach/messages/${messageId}/status`,
+    `/api/outreach/messages/${messageId}/status`,
     {
       method: 'PATCH',
       body: JSON.stringify({ status }),
