@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HookLeads.Api.Controllers;
 
 [ApiController]
+[Route("api/scoring")]
 [Authorize]
 public class ScoringController : ControllerBase
 {
@@ -19,7 +20,7 @@ public class ScoringController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("scoring/recalculate")]
+    [HttpPost("recalculate")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RecalculateScores(
         [FromServices] ILeadScoringService scoringService,

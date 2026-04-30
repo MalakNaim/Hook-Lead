@@ -22,6 +22,7 @@ Tasks are ordered by milestone. Complete one milestone fully before starting the
 - [ ] Create and apply initial EF Core migration
 
 ### Backend Tasks
+- [x] Add explicit `api/<controller>` route prefix to all ASP.NET Core controllers (AuthController, LeadsController, WorkspaceController, ImportController, IcpController, OutreachController, ScoringController)
 - [ ] Define `Workspace` entity in `HookLeads.Domain/Entities`
 - [ ] Define `User` entity with `Role` enum (`Admin`, `Rep`) in `HookLeads.Domain/Entities`
 - [ ] Define `RefreshToken` entity in `HookLeads.Domain/Entities`

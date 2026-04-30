@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HookLeads.Api.Controllers;
 
 [ApiController]
-[Route("icp")]
+[Route("api/icp")]
 [Authorize]
 public class IcpController : ControllerBase
 {

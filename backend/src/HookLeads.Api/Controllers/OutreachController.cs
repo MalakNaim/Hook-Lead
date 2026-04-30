@@ -8,10 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace HookLeads.Api.Controllers;
 
 [ApiController]
+[Route("api/outreach")]
 [Authorize]
 public class OutreachController : ControllerBase
 {
-    [HttpPost("leads/{leadId:guid}/outreach/generate")]
+    [HttpPost("leads/{leadId:guid}/generate")]
     public async Task<IActionResult> Generate(
         Guid leadId,
         [FromServices] GenerateOutreachMessageCommandHandler handler,
@@ -21,7 +22,7 @@ public class OutreachController : ControllerBase
         return CreatedAtAction(nameof(Generate), new { leadId }, result);
     }
 
-    [HttpGet("leads/{leadId:guid}/outreach/messages")]
+    [HttpGet("leads/{leadId:guid}/messages")]
     public async Task<IActionResult> GetMessages(
         Guid leadId,
         [FromServices] GetOutreachMessagesQueryHandler handler,
@@ -31,7 +32,7 @@ public class OutreachController : ControllerBase
         return Ok(results);
     }
 
-    [HttpGet("outreach/messages/{messageId:guid}/email-draft")]
+    [HttpGet("messages/{messageId:guid}/email-draft")]
     public async Task<IActionResult> GetEmailDraft(
         Guid messageId,
         [FromServices] GetOutreachEmailDraftQueryHandler handler,
@@ -41,7 +42,7 @@ public class OutreachController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPatch("outreach/messages/{messageId:guid}/status")]
+    [HttpPatch("messages/{messageId:guid}/status")]
     public async Task<IActionResult> UpdateStatus(
         Guid messageId,
         [FromBody] UpdateOutreachMessageStatusCommand command,

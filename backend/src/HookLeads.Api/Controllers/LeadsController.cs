@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HookLeads.Api.Controllers;
 
 [ApiController]
-[Route("leads")]
+[Route("api/leads")]
 [Authorize]
 public class LeadsController : ControllerBase
 {

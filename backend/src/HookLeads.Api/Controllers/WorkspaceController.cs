@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HookLeads.Api.Controllers;
 
 [ApiController]
-[Route("workspace")]
+[Route("api/workspace")]
 [Authorize]
 public class WorkspaceController : ControllerBase
 {

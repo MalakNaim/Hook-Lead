@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HookLeads.Api.Controllers;
 
 [ApiController]
-[Route("import")]
+[Route("api/import")]
 [Authorize(Roles = "Admin")]
 public class ImportController : ControllerBase
 {

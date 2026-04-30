@@ -188,6 +188,43 @@ A running log of prompts and instructions given to Claude Code during developmen
 8. Rep `POST /scoring/recalculate` → 403 ✅
 9. Admin `POST /scoring/recalculate` → 202 ✅
 
+## Session 12 — Backend Route Verification and Documentation
+**Date:** 2026-04-30
+**Summary:** Added explicit `api/<controller>` route prefix to all six controllers that were missing it (LeadsController, WorkspaceController, ImportController, IcpController, OutreachController, ScoringController). AuthController already had the correct `api/[controller]` convention. Ran live route verification: all 29 routes confirmed in Swagger, all unauthenticated requests return 401 (not 404), all authenticated requests return correct responses, old bare routes (without `api/`) correctly return 404. Created `docs/BACKEND_VERIFICATION.md` with full build/run/Swagger instructions, route reference, Postman checklist (28 steps), and common error guide. Added the route task to `docs/specs/001-hook-leads-mvp/tasks.md` and marked it complete. Logged this session.
+
+**Controllers changed:**
+
+| Controller | Before | After |
+|---|---|---|
+| LeadsController | `[Route("leads")]` | `[Route("api/leads")]` |
+| WorkspaceController | `[Route("workspace")]` | `[Route("api/workspace")]` |
+| ImportController | `[Route("import")]` | `[Route("api/import")]` |
+| IcpController | `[Route("icp")]` | `[Route("api/icp")]` |
+| OutreachController | no controller-level route | `[Route("api/outreach")]`; action paths trimmed of redundant prefix |
+| ScoringController | no controller-level route | `[Route("api/scoring")]`; `scoring/recalculate` → `recalculate` |
+
+**Live verification results:**
+1. `dotnet build` → **0 errors, 0 warnings** ✅
+2. API running on `http://localhost:5057` ✅
+3. `GET /swagger/index.html` → 200; `GET /swagger/v1/swagger.json` → 200 (29 paths, 7 groups) ✅
+4. `POST /api/auth/register` → 200 with full JWT pair ✅
+5. `POST /api/auth/login` → 200 with full JWT pair ✅
+6. All 7 protected route prefixes → 401 without token ✅
+7. `GET /api/leads`, `/api/workspace`, `/api/workspace/members` → 200 with token ✅
+8. `GET /api/icp/active` → 404 `{"message":"No active ICP profile found."}` (correct — no data) ✅
+9. `GET /api/scoring/leads/{id}/score` → 404 `{"error":"Lead not found."}` (correct — no data) ✅
+10. Old bare routes `/leads`, `/workspace`, `/icp/active` → 404 (correctly dead) ✅
+
+**Output:**
+- `docs/BACKEND_VERIFICATION.md` — created (build, run, Swagger, full route table, 28-step Postman checklist, 5 common errors)
+- `docs/specs/001-hook-leads-mvp/tasks.md` — route task added and marked `[x]`
+- `backend/src/HookLeads.Api/Controllers/LeadsController.cs` — route updated
+- `backend/src/HookLeads.Api/Controllers/WorkspaceController.cs` — route updated
+- `backend/src/HookLeads.Api/Controllers/ImportController.cs` — route updated
+- `backend/src/HookLeads.Api/Controllers/IcpController.cs` — route updated
+- `backend/src/HookLeads.Api/Controllers/OutreachController.cs` — controller route added, action paths cleaned
+- `backend/src/HookLeads.Api/Controllers/ScoringController.cs` — controller route added, action path cleaned
+
 ## Future Commands
 
 <!-- Add new entries here as development continues. Use the format above. -->

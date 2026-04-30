@@ -12,6 +12,7 @@ namespace HookLeads.Api.Controllers;
 
 [ApiController]
 [AllowAnonymous]
+[Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
     [HttpPost("register")]
