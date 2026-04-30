@@ -1,4 +1,5 @@
 using HookLeads.Application.Common.Exceptions;
+using HookLeads.Application.Common.Extensions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
@@ -44,12 +45,6 @@ public class UpdateLeadCommandHandler
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new LeadResult(
-            lead.Id, lead.FirstName, lead.LastName, lead.Email,
-            lead.JobTitle, lead.Company, lead.Industry,
-            lead.CompanySize, lead.Geography, lead.RevenueRange, lead.LinkedInUrl,
-            lead.Source.ToString(), lead.Status.ToString(),
-            lead.Notes, lead.ImportedAt,
-            lead.IcpScore, lead.ScoreBreakdown);
+        return lead.ToLeadResult();
     }
 }

@@ -17,6 +17,8 @@ public class LeadsController : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetLeads(
+        [FromServices] GetLeadsQueryHandler handler,
+        CancellationToken cancellationToken,
         [FromQuery] string? status,
         [FromQuery] string? industry,
         [FromQuery] DateTime? dateFrom,
@@ -24,9 +26,7 @@ public class LeadsController : ControllerBase
         [FromQuery] int? minScore,
         [FromQuery] int? maxScore,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
-        [FromServices] GetLeadsQueryHandler handler = null!,
-        CancellationToken cancellationToken = default)
+        [FromQuery] int pageSize = 20)
     {
         var query = new GetLeadsQuery(status, industry, dateFrom, dateTo, minScore, maxScore, pageNumber, pageSize);
         var result = await handler.Handle(query, cancellationToken);

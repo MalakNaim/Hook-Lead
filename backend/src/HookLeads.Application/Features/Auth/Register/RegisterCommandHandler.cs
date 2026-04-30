@@ -27,7 +27,7 @@ public class RegisterCommandHandler
 
     public async Task<AuthResult> Handle(RegisterCommand command, CancellationToken cancellationToken = default)
     {
-        var normalizedEmail = command.Email.ToLower().Trim();
+        var normalizedEmail = command.Email.Trim().ToLowerInvariant();
 
         // IgnoreQueryFilters: registration has no workspace context yet — check email globally
         var emailExists = await _context.Users

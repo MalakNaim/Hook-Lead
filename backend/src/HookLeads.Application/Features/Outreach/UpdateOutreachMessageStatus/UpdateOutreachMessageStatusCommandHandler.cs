@@ -26,10 +26,7 @@ public class UpdateOutreachMessageStatusCommandHandler
         if (message == null)
             throw new AppException("Outreach message not found.", 404);
 
-        if (!Enum.TryParse<OutreachStatus>(command.Status, ignoreCase: true, out var newStatus))
-            throw new AppException(
-                $"Invalid status '{command.Status}'. Valid values are: {string.Join(", ", Enum.GetNames<OutreachStatus>())}.",
-                400);
+        var newStatus = Enum.Parse<OutreachStatus>(command.Status, ignoreCase: true);
 
         message.Status = newStatus;
 

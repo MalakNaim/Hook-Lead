@@ -27,16 +27,11 @@ public class AddIcpCriterionCommandHandler
         if (profile == null)
             throw new AppException("ICP profile not found.", 404);
 
-        if (!Enum.TryParse<CriterionType>(command.CriterionType, ignoreCase: true, out var criterionType))
-            throw new AppException(
-                $"Invalid criterion type '{command.CriterionType}'. Valid values are: {string.Join(", ", Enum.GetNames<CriterionType>())}.",
-                400);
-
         var criterion = new IcpCriterion
         {
             Id = Guid.NewGuid(),
             IcpProfileId = profileId,
-            CriterionType = criterionType,
+            CriterionType = Enum.Parse<CriterionType>(command.CriterionType, ignoreCase: true),
             Value = command.Value.Trim(),
             Weight = command.Weight
         };

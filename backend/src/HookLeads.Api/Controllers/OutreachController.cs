@@ -1,3 +1,4 @@
+using FluentValidation;
 using HookLeads.Application.Features.Outreach.GenerateOutreachMessage;
 using HookLeads.Application.Features.Outreach.GetOutreachEmailDraft;
 using HookLeads.Application.Features.Outreach.GetOutreachMessages;
@@ -47,8 +48,10 @@ public class OutreachController : ControllerBase
         Guid messageId,
         [FromBody] UpdateOutreachMessageStatusCommand command,
         [FromServices] UpdateOutreachMessageStatusCommandHandler handler,
+        [FromServices] IValidator<UpdateOutreachMessageStatusCommand> validator,
         CancellationToken cancellationToken)
     {
+        await validator.ValidateAndThrowAsync(command, cancellationToken);
         var result = await handler.Handle(command, messageId, cancellationToken);
         return Ok(result);
     }

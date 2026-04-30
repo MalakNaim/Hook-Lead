@@ -25,7 +25,7 @@ public class InviteMemberCommandHandler
 
     public async Task Handle(InviteMemberCommand command, Guid workspaceId, CancellationToken cancellationToken = default)
     {
-        var normalizedEmail = command.Email.ToLower().Trim();
+        var normalizedEmail = command.Email.Trim().ToLowerInvariant();
 
         var emailExists = await _context.Users
             .IgnoreQueryFilters()
@@ -33,9 +33,6 @@ public class InviteMemberCommandHandler
 
         if (emailExists)
             throw new AppException("A user with this email already exists.", 409);
-
-        if (!Enum.TryParse<UserRole>(command.Role, ignoreCase: true, out var role))
-            throw new AppException($"Invalid role '{command.Role}'. Valid values are Admin and Rep.", 400);
 
         // Create an inactive user — activation happens when the invited user sets their password.
         // Invite email delivery is implemented in Milestone 7.
@@ -45,7 +42,7 @@ public class InviteMemberCommandHandler
             WorkspaceId = workspaceId,
             Email = normalizedEmail,
             PasswordHash = _passwordHasher.Hash(Guid.NewGuid().ToString()),
-            Role = role,
+            Role = Enum.Parse<UserRole>(command.Role, ignoreCase: true),
             IsActive = false,
             CreatedAt = DateTime.UtcNow
         };

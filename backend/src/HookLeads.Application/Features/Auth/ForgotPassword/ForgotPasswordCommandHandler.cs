@@ -21,7 +21,7 @@ public class ForgotPasswordCommandHandler
     {
         var user = await _context.Users
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(u => u.Email == command.Email.ToLower().Trim(), cancellationToken);
+            .FirstOrDefaultAsync(u => u.Email == command.Email.Trim().ToLowerInvariant(), cancellationToken);
 
         // Always return without revealing whether the email exists (prevents enumeration).
         // Reset token storage and email delivery are implemented in Milestone 7.

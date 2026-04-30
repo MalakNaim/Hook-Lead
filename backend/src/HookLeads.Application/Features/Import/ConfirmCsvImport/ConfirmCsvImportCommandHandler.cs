@@ -28,7 +28,8 @@ public class ConfirmCsvImportCommandHandler
         if (command.Rows == null || command.Rows.Count == 0)
             throw new AppException("No rows provided for import.", 400);
 
-        var workspaceId = _currentWorkspace.WorkspaceId!.Value;
+        var workspaceId = _currentWorkspace.WorkspaceId
+            ?? throw new AppException("Workspace context is required.", 401);
 
         var activeProfile = await _context.IcpProfiles
             .Include(p => p.Criteria)

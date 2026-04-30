@@ -32,12 +32,7 @@ public class UpdateIcpCriterionCommandHandler
         if (criterion == null)
             throw new AppException("ICP criterion not found.", 404);
 
-        if (!Enum.TryParse<CriterionType>(command.CriterionType, ignoreCase: true, out var criterionType))
-            throw new AppException(
-                $"Invalid criterion type '{command.CriterionType}'. Valid values are: {string.Join(", ", Enum.GetNames<CriterionType>())}.",
-                400);
-
-        criterion.CriterionType = criterionType;
+        criterion.CriterionType = Enum.Parse<CriterionType>(command.CriterionType, ignoreCase: true);
         criterion.Value = command.Value.Trim();
         criterion.Weight = command.Weight;
         profile.UpdatedAt = DateTime.UtcNow;

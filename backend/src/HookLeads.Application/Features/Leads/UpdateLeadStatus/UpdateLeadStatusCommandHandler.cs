@@ -1,4 +1,5 @@
 using HookLeads.Application.Common.Exceptions;
+using HookLeads.Application.Common.Extensions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Common.Models;
 using HookLeads.Domain.Enums;
@@ -23,20 +24,9 @@ public class UpdateLeadStatusCommandHandler
         if (lead == null)
             throw new AppException("Lead not found.", 404);
 
-        if (!Enum.TryParse<LeadStatus>(command.Status, ignoreCase: true, out var status))
-            throw new AppException(
-                $"Invalid status '{command.Status}'. Valid values are: {string.Join(", ", Enum.GetNames<LeadStatus>())}.",
-                400);
-
-        lead.Status = status;
+        lead.Status = Enum.Parse<LeadStatus>(command.Status, ignoreCase: true);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new LeadResult(
-            lead.Id, lead.FirstName, lead.LastName, lead.Email,
-            lead.JobTitle, lead.Company, lead.Industry,
-            lead.CompanySize, lead.Geography, lead.RevenueRange, lead.LinkedInUrl,
-            lead.Source.ToString(), lead.Status.ToString(),
-            lead.Notes, lead.ImportedAt,
-            lead.IcpScore, lead.ScoreBreakdown);
+        return lead.ToLeadResult();
     }
 }

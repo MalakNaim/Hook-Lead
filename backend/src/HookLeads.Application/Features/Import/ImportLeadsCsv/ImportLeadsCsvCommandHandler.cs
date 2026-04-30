@@ -1,4 +1,5 @@
 using System.Text;
+using HookLeads.Application.Common.Exceptions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,8 @@ public class ImportLeadsCsvCommandHandler
             .Select(h => h.ToLowerInvariant().Replace(" ", ""))
             .ToArray();
 
-        var workspaceId = _currentWorkspace.WorkspaceId!.Value;
+        var workspaceId = _currentWorkspace.WorkspaceId
+            ?? throw new AppException("Workspace context is required.", 401);
         var existingEmails = (await _context.Leads
             .Select(l => l.Email.ToLower())
             .ToListAsync(cancellationToken))

@@ -1,3 +1,4 @@
+using HookLeads.Application.Common.Exceptions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Common.Models;
 using HookLeads.Domain.Entities;
@@ -24,7 +25,8 @@ public class CreateIcpProfileCommandHandler
 
     public async Task<IcpProfileResult> Handle(CreateIcpProfileCommand command, CancellationToken cancellationToken = default)
     {
-        var workspaceId = _currentWorkspace.WorkspaceId!.Value;
+        var workspaceId = _currentWorkspace.WorkspaceId
+            ?? throw new AppException("Workspace context is required.", 401);
 
         if (command.IsActive)
         {
@@ -51,7 +53,7 @@ public class CreateIcpProfileCommandHandler
 
         if (command.IsActive)
             _logger.LogInformation(
-                "ICP profile '{Name}' ({Id}) activated for workspace {WorkspaceId}. Rescore job will be implemented in Milestone 4.",
+                "ICP profile '{Name}' ({Id}) activated for workspace {WorkspaceId}.",
                 profile.Name, profile.Id, workspaceId);
 
         return new IcpProfileResult(profile.Id, profile.Name, profile.IsActive, profile.UpdatedAt, new List<IcpCriterionResult>());

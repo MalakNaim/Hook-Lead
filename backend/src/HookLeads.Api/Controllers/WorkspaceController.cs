@@ -1,4 +1,5 @@
 using FluentValidation;
+using HookLeads.Application.Common.Exceptions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Features.Workspace.GetWorkspace;
 using HookLeads.Application.Features.Workspace.GetWorkspaceMembers;
@@ -14,14 +15,10 @@ namespace HookLeads.Api.Controllers;
 [Authorize]
 public class WorkspaceController : ControllerBase
 {
-    private readonly ICurrentUserService _currentUser;
     private readonly ICurrentWorkspaceService _currentWorkspace;
 
-    public WorkspaceController(
-        ICurrentUserService currentUser,
-        ICurrentWorkspaceService currentWorkspace)
+    public WorkspaceController(ICurrentWorkspaceService currentWorkspace)
     {
-        _currentUser = currentUser;
         _currentWorkspace = currentWorkspace;
     }
 
@@ -31,7 +28,7 @@ public class WorkspaceController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.Handle(
-            new GetWorkspaceQuery(_currentWorkspace.WorkspaceId!.Value),
+            new GetWorkspaceQuery(_currentWorkspace.WorkspaceId ?? throw new AppException("Workspace context is required.", 401)),
             cancellationToken);
         return Ok(result);
     }
@@ -42,7 +39,7 @@ public class WorkspaceController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.Handle(
-            new GetWorkspaceMembersQuery(_currentWorkspace.WorkspaceId!.Value),
+            new GetWorkspaceMembersQuery(_currentWorkspace.WorkspaceId ?? throw new AppException("Workspace context is required.", 401)),
             cancellationToken);
         return Ok(result);
     }
@@ -56,7 +53,7 @@ public class WorkspaceController : ControllerBase
         CancellationToken cancellationToken)
     {
         await validator.ValidateAndThrowAsync(command, cancellationToken);
-        await handler.Handle(command, _currentWorkspace.WorkspaceId!.Value, cancellationToken);
+        await handler.Handle(command, _currentWorkspace.WorkspaceId ?? throw new AppException("Workspace context is required.", 401), cancellationToken);
         return Ok();
     }
 

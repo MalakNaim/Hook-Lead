@@ -43,14 +43,19 @@ public class GenerateOutreachMessageCommandHandler
         if (lead.Status == LeadStatus.Unsubscribed)
             throw new AppException("Cannot generate outreach for an unsubscribed lead.", 400);
 
+        var workspaceId = _currentWorkspace.WorkspaceId
+            ?? throw new AppException("Workspace context is required.", 401);
+        var userId = _currentUser.UserId
+            ?? throw new AppException("User context is required.", 401);
+
         var (subject, body) = _draftService.GenerateDraft(lead);
 
         var message = new OutreachMessage
         {
             Id = Guid.NewGuid(),
             LeadId = lead.Id,
-            WorkspaceId = (Guid)_currentWorkspace.WorkspaceId!,
-            GeneratedBy = (Guid)_currentUser.UserId!,
+            WorkspaceId = workspaceId,
+            GeneratedBy = userId,
             Subject = subject,
             Body = body,
             Status = OutreachStatus.Draft,

@@ -29,7 +29,7 @@ public class LoginCommandHandler
         var user = await _context.Users
             .IgnoreQueryFilters()
             .Include(u => u.Workspace)
-            .FirstOrDefaultAsync(u => u.Email == command.Email.ToLower().Trim(), cancellationToken);
+            .FirstOrDefaultAsync(u => u.Email == command.Email.Trim().ToLowerInvariant(), cancellationToken);
 
         if (user == null || !_passwordHasher.Verify(command.Password, user.PasswordHash))
             throw new AppException("Invalid email or password.", 401);
