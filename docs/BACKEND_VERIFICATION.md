@@ -5,8 +5,51 @@
 | Backend framework | ASP.NET Core Web API · .NET 8 |
 | Base URL | `http://localhost:5057` |
 | Swagger UI | `http://localhost:5057/swagger` |
+| Hangfire Dashboard | `http://localhost:5057/hangfire` |
 | Last verified | 2026-04-30 |
 | Build status | 0 errors · 0 warnings |
+| **API verification** | **PASSED** |
+
+---
+
+## Verification Status
+
+**Backend API Verification: PASSED**
+
+All API groups were tested manually in Postman. Every tested endpoint returned the expected HTTP status and response shape.
+
+### Confirmed working
+
+- Backend runs on `http://localhost:5057`
+- Swagger UI loads at `http://localhost:5057/swagger`
+- SQL Server Docker container connects successfully
+- EF Core migrations applied; database schema is current
+- JWT register and login return valid token pairs
+- Postman collection imported and all requests executed successfully
+
+### Tested API groups
+
+| Group | Result |
+|---|---|
+| Auth | PASSED |
+| Workspace | PASSED |
+| ICP | PASSED |
+| Import | PASSED |
+| Leads | PASSED |
+| Scoring | PASSED |
+| Outreach | PASSED |
+| Swagger / Hangfire | PASSED |
+
+---
+
+## Postman Files
+
+| File | Path |
+|---|---|
+| Collection | `docs/postman/HookLeads.postman_collection.json` |
+| Environment | `docs/postman/HookLeads.local.postman_environment.json` |
+
+Import both files into Postman, select the **Hook Leads Local** environment, then run the checklist below in order.
 
 ---
 
@@ -756,3 +799,23 @@ Postman environment, and retry.
 
 **Fix:** Use the token from the account that was created via `register` — the
 first user in a workspace is always assigned the `Admin` role.
+
+---
+
+## Known Solved Issues
+
+| Issue | Cause | Fix applied |
+|---|---|---|
+| Port 5057 already in use | Previous process still bound to the port | `lsof -i :5057` → `kill -9 <PID>` |
+| 404 on API routes | Controller `[Route]` attribute missing `api/` prefix | Added `[Route("api/[controller]")]` to all controllers |
+| 415 Unsupported Media Type | Postman body sent without `Content-Type: application/json` | Switched Postman body to raw → JSON |
+| SQL Server connection failure | Container not running or password mismatch between `appsettings.Development.json` and `docker-compose.yml` | Aligned passwords; ensured `docker compose up -d` runs first |
+| Frontend login URL mismatch | Frontend pointed to a different auth URL | Noted; frontend work is paused — backend unaffected |
+
+---
+
+## Next Backend Phase
+
+1. Backend refactoring (clean up controllers, services, and data access as needed)
+2. Re-run the full Postman collection after refactoring to confirm no regressions
+3. Commit and push once the re-run passes
