@@ -3,40 +3,41 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DUMMY_LEADS } from '@/lib/dummy-data';
-import type { LeadClassification, LeadStatus } from '@/types';
+import type { LeadClassification } from '@/types';
 import { ScoreRing } from '@/components/ui/ScoreRing';
-import { Badge, classificationVariant, statusVariant, enrichmentVariant } from '@/components/ui/Badge';
+import { Badge, classificationVariant, enrichmentVariant } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type ClassFilter = LeadClassification | 'All' | 'Unclassified';
-type StatusFilter = LeadStatus | 'All';
-type SortKey = 'score-desc' | 'score-asc' | 'name-asc' | 'date-desc';
+type ClassFilter   = LeadClassification | 'All' | 'Unclassified';
+type EnrichFilter  = 'All' | 'Enriched' | 'Partial' | 'Failed';
+type SortKey       = 'score-desc' | 'score-asc' | 'name-asc' | 'date-desc';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const CLASS_FILTERS: ClassFilter[] = ['All', 'Hot', 'Warm', 'Cold', 'Reject', 'Unclassified'];
+const CLASS_FILTERS: ClassFilter[]  = ['All', 'Hot', 'Warm', 'Cold', 'Reject', 'Unclassified'];
+const ENRICH_FILTERS: EnrichFilter[] = ['All', 'Enriched', 'Partial', 'Failed'];
 
-const CLASS_DOT_COLOR: Record<string, string> = {
-  Hot: 'bg-rose-500',
-  Warm: 'bg-orange-400',
-  Cold: 'bg-sky-500',
-  Reject: 'bg-slate-400',
+const CLASS_DOT: Record<string, string> = {
+  Hot:          'bg-rose-500',
+  Warm:         'bg-orange-400',
+  Cold:         'bg-sky-500',
+  Reject:       'bg-slate-400',
   Unclassified: 'bg-slate-300',
-  All: 'bg-indigo-400',
+  All:          'bg-indigo-400',
 };
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'score-desc', label: 'Score: High → Low' },
   { value: 'score-asc',  label: 'Score: Low → High' },
   { value: 'name-asc',   label: 'Name: A → Z' },
-  { value: 'date-desc',  label: 'Date: Most Recent' },
+  { value: 'date-desc',  label: 'Date: Newest first' },
 ];
 
-// ── Pipeline Stat Card ─────────────────────────────────────────────────────────
+// ── Classification pill ────────────────────────────────────────────────────────
 
-function PipelineCard({
+function ClassPill({
   label,
   count,
   isActive,
@@ -58,11 +59,7 @@ function PipelineCard({
           : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:shadow-sm'
       }`}
     >
-      <span
-        className={`h-2 w-2 shrink-0 rounded-full ${
-          isActive ? 'bg-white/70' : dotColor
-        }`}
-      />
+      <span className={`h-2 w-2 shrink-0 rounded-full ${isActive ? 'bg-white/70' : dotColor}`} />
       {label}
       <span
         className={`min-w-[18px] rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums ${
@@ -80,34 +77,26 @@ function PipelineCard({
 export default function LeadsPage() {
   const router = useRouter();
 
-  const [search, setSearch]           = useState('');
-  const [classFilter, setClassFilter] = useState<ClassFilter>('All');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
-  const [sortBy, setSortBy]           = useState<SortKey>('score-desc');
+  const [search, setSearch]             = useState('');
+  const [classFilter, setClassFilter]   = useState<ClassFilter>('All');
+  const [enrichFilter, setEnrichFilter] = useState<EnrichFilter>('All');
+  const [sortBy, setSortBy]             = useState<SortKey>('score-desc');
 
-  // Count helpers (always on full data, ignoring active filters)
   function classCount(f: ClassFilter) {
     if (f === 'All') return DUMMY_LEADS.length;
-    if (f === 'Unclassified') return DUMMY_LEADS.filter((l) => l.classification === null).length;
+    if (f === 'Unclassified') return DUMMY_LEADS.filter((l) => !l.classification).length;
     return DUMMY_LEADS.filter((l) => l.classification === f).length;
   }
 
-  // Filtered + sorted leads
   const leads = useMemo(() => {
     const q = search.toLowerCase().trim();
 
     const filtered = DUMMY_LEADS.filter((l) => {
-      // Classification filter
       if (classFilter !== 'All') {
-        if (classFilter === 'Unclassified') {
-          if (l.classification !== null) return false;
-        } else {
-          if (l.classification !== classFilter) return false;
-        }
+        if (classFilter === 'Unclassified' ? l.classification !== null : l.classification !== classFilter)
+          return false;
       }
-      // Status filter
-      if (statusFilter !== 'All' && l.status !== statusFilter) return false;
-      // Search
+      if (enrichFilter !== 'All' && l.enrichmentStatus !== enrichFilter) return false;
       if (q) {
         const hay = `${l.firstName} ${l.lastName} ${l.email} ${l.company ?? ''} ${l.jobTitle ?? ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
@@ -115,7 +104,6 @@ export default function LeadsPage() {
       return true;
     });
 
-    // Sort
     return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'score-desc': return (b.icpScore ?? -1) - (a.icpScore ?? -1);
@@ -127,27 +115,26 @@ export default function LeadsPage() {
         default: return 0;
       }
     });
-  }, [search, classFilter, statusFilter, sortBy]);
+  }, [search, classFilter, enrichFilter, sortBy]);
 
-  const hasActiveFilters = search !== '' || classFilter !== 'All' || statusFilter !== 'All';
+  const hasActiveFilters = search !== '' || classFilter !== 'All' || enrichFilter !== 'All';
 
   function clearFilters() {
     setSearch('');
     setClassFilter('All');
-    setStatusFilter('All');
+    setEnrichFilter('All');
     setSortBy('score-desc');
   }
 
   return (
     <div className="space-y-5">
+
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900">
             Leads
-            <span className="ml-2 text-base font-normal text-slate-400">
-              ({DUMMY_LEADS.length})
-            </span>
+            <span className="ml-2 text-base font-normal text-slate-400">({DUMMY_LEADS.length})</span>
           </h1>
           <p className="mt-0.5 text-sm text-slate-500">
             Review and manage every lead in your pipeline.
@@ -165,48 +152,43 @@ export default function LeadsPage() {
         </button>
       </div>
 
-      {/* ── Pipeline stats / classification filter ── */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      {/* ── Classification filter pills ── */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         {CLASS_FILTERS.map((f) => (
-          <PipelineCard
+          <ClassPill
             key={f}
             label={f}
             count={classCount(f)}
             isActive={classFilter === f}
-            dotColor={CLASS_DOT_COLOR[f] ?? 'bg-slate-400'}
+            dotColor={CLASS_DOT[f] ?? 'bg-slate-400'}
             onClick={() => setClassFilter(f)}
           />
         ))}
       </div>
 
-      {/* ── Toolbar: search + sort + status ── */}
+      {/* ── Toolbar: search + sort + enrichment ── */}
       <div className="flex flex-wrap items-center gap-2">
+
         {/* Search */}
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <svg
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 pointer-events-none"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
           </svg>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name, email, company…"
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-9 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded text-slate-400 hover:text-slate-700 focus:outline-none"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -219,10 +201,7 @@ export default function LeadsPage() {
         <div className="relative">
           <svg
             className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
           </svg>
@@ -232,51 +211,44 @@ export default function LeadsPage() {
             className="appearance-none rounded-lg border border-slate-300 bg-white py-2 pl-8 pr-8 text-sm text-slate-700 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
+              <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
           <svg
             className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </div>
 
-        {/* Status filter */}
-        <div className="relative">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="appearance-none rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-8 text-sm text-slate-700 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="All">All Statuses</option>
-            <option value="New">New</option>
-            <option value="Contacted">Contacted</option>
-            <option value="Qualified">Qualified</option>
-            <option value="Disqualified">Disqualified</option>
-          </select>
-          <svg
-            className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
+        {/* Enrichment segmented filter */}
+        <div
+          className="flex overflow-hidden rounded-lg border border-slate-300 bg-white"
+          role="group"
+          aria-label="Filter by enrichment status"
+        >
+          {ENRICH_FILTERS.map((f, i) => (
+            <button
+              key={f}
+              onClick={() => setEnrichFilter(f)}
+              className={`px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap focus:outline-none focus:ring-inset focus:ring-2 focus:ring-indigo-500 ${
+                i > 0 ? 'border-l border-slate-300' : ''
+              } ${
+                enrichFilter === f
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              {f === 'All' ? 'All enrichment' : f}
+            </button>
+          ))}
         </div>
 
-        {/* Clear filters */}
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors"
+            className="text-xs font-medium text-slate-500 transition-colors hover:text-indigo-600"
           >
             Clear filters
           </button>
@@ -291,28 +263,18 @@ export default function LeadsPage() {
             description={
               hasActiveFilters
                 ? 'Try adjusting your filters or search term.'
-                : 'Import leads or adjust your filter to see results here.'
+                : 'Import leads or adjust your filters to see results here.'
             }
             icon={
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17 20h5v-2a4 4 0 00-5.477-3.765M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a4 4 0 015.477-3.765M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                />
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-5.477-3.765M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a4 4 0 015.477-3.765M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             }
             action={
               hasActiveFilters ? (
                 <button
                   onClick={clearFilters}
-                  className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                  className="text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-800"
                 >
                   Clear all filters
                 </button>
@@ -321,63 +283,114 @@ export default function LeadsPage() {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/80">
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Lead
+
+                  {/* Name — always visible */}
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                    Full Name
                   </th>
-                  <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 md:table-cell">
-                    Company / Title
+
+                  {/* Job Title — sm+ */}
+                  <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 sm:table-cell">
+                    Job Title
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
+
+                  {/* Company — md+ */}
+                  <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 md:table-cell">
+                    Company
+                  </th>
+
+                  {/* Email — lg+ */}
+                  <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">
+                    Email
+                  </th>
+
+                  {/* LinkedIn — xl+ */}
+                  <th className="hidden px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500 xl:table-cell">
+                    LinkedIn
+                  </th>
+
+                  {/* Score — always */}
+                  <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                     Score
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+
+                  {/* Classification — always */}
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                     Classification
                   </th>
-                  <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">
-                    Status
-                  </th>
-                  <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">
+
+                  {/* Enrichment — md+ */}
+                  <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 md:table-cell">
                     Enrichment
                   </th>
-                  <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 sm:table-cell">
-                    Imported
-                  </th>
-                  <th className="w-8 px-4 py-3" />
+
+                  {/* Actions — always */}
+                  <th className="w-10 px-4 py-3" aria-label="View lead" />
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-slate-50">
                 {leads.map((lead) => (
                   <tr
                     key={lead.id}
-                    onClick={() => router.push(`/leads/${lead.id}`)}
+                    onClick={() => router.push(`/dashboard/leads/${lead.id}`)}
                     className="group cursor-pointer transition-colors hover:bg-indigo-50/40"
                   >
-                    {/* Lead */}
+
+                    {/* Full Name */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[11px] font-bold text-indigo-700 select-none">
                           {lead.firstName[0]}{lead.lastName[0]}
                         </div>
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">
-                            {lead.firstName} {lead.lastName}
-                          </p>
-                          <p className="truncate text-xs text-slate-400">{lead.email}</p>
-                        </div>
+                        <p className="max-w-[130px] truncate font-semibold text-slate-900 transition-colors group-hover:text-indigo-700">
+                          {lead.firstName} {lead.lastName}
+                        </p>
                       </div>
+                    </td>
+
+                    {/* Job Title */}
+                    <td className="hidden px-4 py-3.5 sm:table-cell">
+                      <p className="max-w-[140px] truncate text-slate-700">
+                        {lead.jobTitle ?? <span className="text-slate-300">—</span>}
+                      </p>
                     </td>
 
                     {/* Company */}
                     <td className="hidden px-4 py-3.5 md:table-cell">
-                      <p className="max-w-[160px] truncate font-medium text-slate-700">
-                        {lead.company ?? '—'}
+                      <p className="max-w-[130px] truncate font-medium text-slate-700">
+                        {lead.company ?? <span className="font-normal text-slate-300">—</span>}
                       </p>
-                      <p className="max-w-[160px] truncate text-xs text-slate-400">
-                        {lead.jobTitle ?? '—'}
+                    </td>
+
+                    {/* Email */}
+                    <td className="hidden px-4 py-3.5 lg:table-cell">
+                      <p className="max-w-[180px] truncate text-xs text-slate-500 tabular-nums">
+                        {lead.email}
                       </p>
+                    </td>
+
+                    {/* LinkedIn */}
+                    <td className="hidden px-4 py-3.5 text-center xl:table-cell">
+                      {lead.linkedInUrl ? (
+                        <a
+                          href={lead.linkedInUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${lead.firstName} ${lead.lastName} on LinkedIn`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-blue-50 hover:text-[#0077b5]"
+                        >
+                          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                          </svg>
+                        </a>
+                      ) : (
+                        <span className="text-slate-200" aria-hidden="true">—</span>
+                      )}
                     </td>
 
                     {/* Score */}
@@ -387,7 +400,7 @@ export default function LeadsPage() {
                           <ScoreRing score={lead.icpScore} size="sm" />
                         </div>
                       ) : (
-                        <span className="text-xs font-medium text-slate-300">—</span>
+                        <span className="text-slate-300" aria-label="Not scored">—</span>
                       )}
                     </td>
 
@@ -402,13 +415,8 @@ export default function LeadsPage() {
                       )}
                     </td>
 
-                    {/* Status */}
-                    <td className="hidden px-4 py-3.5 lg:table-cell">
-                      <Badge variant={statusVariant(lead.status)}>{lead.status}</Badge>
-                    </td>
-
                     {/* Enrichment */}
-                    <td className="hidden px-4 py-3.5 lg:table-cell">
+                    <td className="hidden px-4 py-3.5 md:table-cell">
                       {lead.enrichmentStatus ? (
                         <Badge variant={enrichmentVariant(lead.enrichmentStatus)}>
                           {lead.enrichmentStatus}
@@ -418,22 +426,12 @@ export default function LeadsPage() {
                       )}
                     </td>
 
-                    {/* Date */}
-                    <td className="hidden px-4 py-3.5 text-xs text-slate-400 sm:table-cell">
-                      {new Date(lead.importedAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </td>
-
-                    {/* Arrow */}
+                    {/* Actions — chevron that animates on row hover */}
                     <td className="px-4 py-3.5">
                       <svg
                         className="h-4 w-4 text-slate-300 transition-colors group-hover:text-indigo-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                        aria-hidden="true"
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
@@ -450,13 +448,15 @@ export default function LeadsPage() {
       {leads.length > 0 && (
         <div className="flex items-center justify-between text-xs text-slate-400">
           <span>
-            Showing <span className="font-semibold text-slate-600">{leads.length}</span> of{' '}
+            Showing{' '}
+            <span className="font-semibold text-slate-600">{leads.length}</span>
+            {' '}of{' '}
             <span className="font-semibold text-slate-600">{DUMMY_LEADS.length}</span> leads
           </span>
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
+              className="font-medium text-indigo-500 transition-colors hover:text-indigo-700"
             >
               Clear filters
             </button>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { LocaleProvider } from '@/lib/i18n';
 import './globals.css';
 
 const geistSans = localFont({
@@ -22,9 +23,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    // suppressHydrationWarning: LocaleProvider sets lang/dir on the client after hydration
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+        <LocaleProvider>{children}</LocaleProvider>
       </body>
     </html>
   );

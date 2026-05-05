@@ -1,38 +1,42 @@
 # Hook Leads — Next Steps
 
-Ordered implementation steps following Milestone 0 completion.
+Ordered upcoming work following frontend MVP scaffold completion.
 
 ---
 
-## Immediate Steps
+## Frontend Remaining Work
 
-- [ ] **Step 1 — Verify folder structure**
-  Confirm backend Clean Architecture layers, frontend scaffold, docs, and config files are all in place and correct.
+- [ ] **1. Complete Settings page**
+  Finish the settings UI — workspace details, user profile, and notification preferences.
 
-- [ ] **Step 2 — Initialize Git commit for Milestone 0**
-  Stage all foundation files and create the first meaningful commit marking Milestone 0 as complete.
+- [ ] **2. Improve Leads List page**
+  Add filtering, sorting, pagination, and search. Polish empty states and loading skeletons.
 
-- [ ] **Step 3 — Prepare Spec Kit constitution**
-  Define the standard Spec Kit template used for all future features: goal, user stories, acceptance criteria, data model changes, API contract, UI description, and out-of-scope.
+- [ ] **3. Improve Lead Details page**
+  Expand the lead profile view — activity timeline, scoring breakdown, outreach history, and status controls.
 
-- [ ] **Step 4 — Add MVP specification**
-  Write the full MVP spec using the Spec Kit format. Define scope, feature list, user roles, and success criteria for each Milestone 1–6 feature.
-
-- [ ] **Step 5 — Generate implementation tasks**
-  Break the MVP spec into discrete, ordered implementation tasks. Assign each task to a milestone and layer (Domain, Application, Infrastructure, Api, Frontend).
-
-- [ ] **Step 6 — Start Milestone 1: Authentication and Workspace**
-  Implement tenant registration, user registration and login, JWT issuance and refresh, and the basic workspace shell in both backend and frontend.
+- [ ] **4. Improve Outreach page**
+  Add outreach sequence builder, template management, and send status tracking.
 
 ---
 
-## Upcoming Milestones
+## Integration Work
 
-| Milestone | Focus | Depends On |
-|---|---|---|
-| Milestone 1 | Authentication and Workspace | Step 6 above |
-| Milestone 2 | ICP Builder | Milestone 1 |
-| Milestone 3 | Lead Ingestion and Scoring | Milestone 2 |
-| Milestone 4 | AI Outreach and Gmail Integration | Milestone 3 |
-| Milestone 5 | Qualification Queue | Milestone 4 |
-| Milestone 6 | Reporting Dashboard | Milestone 5 |
+- [ ] **5. Add frontend API service layer**
+  Create a typed API client under `frontend/lib/api/` that wraps all backend endpoints. Replace mock data imports with real service calls.
+
+- [ ] **6. Connect frontend to backend APIs**
+  Wire each page to its corresponding backend API: leads, ICP, outreach, workspace, and auth endpoints.
+
+- [ ] **7. Add auth protection checks**
+  Enforce route protection in `(protected)/layout.tsx`. Redirect unauthenticated users to `/login`. Validate JWT on page load.
+
+---
+
+## Validation & Demo Prep
+
+- [ ] **8. Test full user flow**
+  Run through the complete flow end-to-end: register → create ICP → import leads → score → outreach → dashboard.
+
+- [ ] **9. Prepare MVP demo**
+  Record or run a live walkthrough of the full user journey. Verify all pages render correctly with real backend data.

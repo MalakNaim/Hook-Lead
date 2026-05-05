@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { login } from "@/services/authService";
 import { saveTokens, isAuthenticated } from "@/lib/auth";
+import { useLocale } from "@/lib/i18n";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -48,6 +49,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/leads";
+  const { t } = useLocale();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,7 +57,6 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Redirect away if already authenticated
   useEffect(() => {
     if (isAuthenticated()) router.replace(next);
   }, [router, next]);
@@ -70,7 +71,7 @@ function LoginForm() {
       router.replace(next);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again.",
+        err instanceof Error ? err.message : t("auth.login.genericError"),
       );
     } finally {
       setLoading(false);
@@ -82,13 +83,15 @@ function LoginForm() {
       {/* Brand mark */}
       <div className="mb-8 text-center">
         <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900">
-          <span className="text-sm font-bold tracking-tight text-white">HL</span>
+          <span className="text-sm font-bold tracking-tight text-white">
+            {t("common.brand")}
+          </span>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-          Welcome back
+          {t("auth.login.title")}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          Sign in to your Hook Leads account
+          {t("auth.login.subtitle")}
         </p>
       </div>
 
@@ -101,7 +104,7 @@ function LoginForm() {
               htmlFor="email"
               className="mb-1.5 block text-sm font-medium text-gray-700"
             >
-              Email address
+              {t("auth.login.emailLabel")}
             </label>
             <input
               id="email"
@@ -110,7 +113,7 @@ function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
+              placeholder={t("auth.login.emailPlaceholder")}
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
             />
           </div>
@@ -121,7 +124,7 @@ function LoginForm() {
               htmlFor="password"
               className="mb-1.5 block text-sm font-medium text-gray-700"
             >
-              Password
+              {t("auth.login.passwordLabel")}
             </label>
             <div className="relative">
               <input
@@ -131,13 +134,13 @@ function LoginForm() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                className="w-full rounded-lg border border-gray-300 ps-3 pe-10 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                aria-label={t(showPassword ? "auth.login.hidePassword" : "auth.login.showPassword")}
+                className="absolute inset-y-0 end-0 flex items-center px-3 text-gray-400 hover:text-gray-600 focus:outline-none"
               >
                 {showPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
               </button>
@@ -164,10 +167,10 @@ function LoginForm() {
             {loading ? (
               <>
                 <Spinner />
-                Signing in…
+                {t("auth.login.submitting")}
               </>
             ) : (
-              "Sign in"
+              t("auth.login.submitButton")
             )}
           </button>
         </form>
@@ -175,12 +178,12 @@ function LoginForm() {
 
       {/* Register link */}
       <p className="mt-6 text-center text-sm text-gray-500">
-        New to Hook Leads?{" "}
+        {t("auth.login.noAccount")}{" "}
         <Link
           href="/register"
           className="font-medium text-gray-900 underline-offset-2 hover:underline"
         >
-          Create an account
+          {t("auth.login.createAccount")}
         </Link>
       </p>
     </div>

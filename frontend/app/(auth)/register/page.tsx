@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { register } from "@/services/authService";
 import { saveTokens, isAuthenticated } from "@/lib/auth";
+import { useLocale } from "@/lib/i18n";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -56,31 +57,32 @@ function validate(
   email: string,
   password: string,
   confirmPassword: string,
+  t: (key: string) => string,
 ): FormErrors {
   const errors: FormErrors = {};
 
   if (!workspaceName.trim()) {
-    errors.workspaceName = "Workspace name is required.";
+    errors.workspaceName = t("auth.register.errors.workspaceRequired");
   } else if (workspaceName.trim().length < 2) {
-    errors.workspaceName = "Workspace name must be at least 2 characters.";
+    errors.workspaceName = t("auth.register.errors.workspaceTooShort");
   }
 
   if (!email.trim()) {
-    errors.email = "Email address is required.";
+    errors.email = t("auth.register.errors.emailRequired");
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-    errors.email = "Enter a valid email address.";
+    errors.email = t("auth.register.errors.emailInvalid");
   }
 
   if (!password) {
-    errors.password = "Password is required.";
+    errors.password = t("auth.register.errors.passwordRequired");
   } else if (password.length < 8) {
-    errors.password = "Password must be at least 8 characters.";
+    errors.password = t("auth.register.errors.passwordTooShort");
   }
 
   if (!confirmPassword) {
-    errors.confirmPassword = "Please confirm your password.";
+    errors.confirmPassword = t("auth.register.errors.confirmPasswordRequired");
   } else if (password !== confirmPassword) {
-    errors.confirmPassword = "Passwords do not match.";
+    errors.confirmPassword = t("auth.register.errors.passwordMismatch");
   }
 
   return errors;
@@ -90,6 +92,7 @@ function validate(
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useLocale();
 
   const [workspaceName, setWorkspaceName] = useState("");
   const [email, setEmail] = useState("");
@@ -101,7 +104,6 @@ export default function RegisterPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Redirect away if already authenticated
   useEffect(() => {
     if (isAuthenticated()) router.replace("/leads");
   }, [router]);
@@ -110,7 +112,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setServerError(null);
 
-    const errors = validate(workspaceName, email, password, confirmPassword);
+    const errors = validate(workspaceName, email, password, confirmPassword, t);
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
@@ -128,7 +130,7 @@ export default function RegisterPage() {
       router.replace("/leads");
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again.",
+        err instanceof Error ? err.message : t("auth.register.genericError"),
       );
     } finally {
       setLoading(false);
@@ -140,13 +142,15 @@ export default function RegisterPage() {
       {/* Brand mark */}
       <div className="mb-8 text-center">
         <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900">
-          <span className="text-sm font-bold tracking-tight text-white">HL</span>
+          <span className="text-sm font-bold tracking-tight text-white">
+            {t("common.brand")}
+          </span>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-          Create your account
+          {t("auth.register.title")}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          Set up your Hook Leads workspace
+          {t("auth.register.subtitle")}
         </p>
       </div>
 
@@ -159,7 +163,7 @@ export default function RegisterPage() {
               htmlFor="workspaceName"
               className="mb-1.5 block text-sm font-medium text-gray-700"
             >
-              Workspace name
+              {t("auth.register.workspaceLabel")}
             </label>
             <input
               id="workspaceName"
@@ -167,7 +171,7 @@ export default function RegisterPage() {
               autoComplete="organization"
               value={workspaceName}
               onChange={(e) => setWorkspaceName(e.target.value)}
-              placeholder="Acme Inc."
+              placeholder={t("auth.register.workspacePlaceholder")}
               className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none focus:ring-1 ${
                 fieldErrors.workspaceName
                   ? "border-red-400 focus:border-red-400 focus:ring-red-400"
@@ -185,7 +189,7 @@ export default function RegisterPage() {
               htmlFor="email"
               className="mb-1.5 block text-sm font-medium text-gray-700"
             >
-              Email address
+              {t("auth.register.emailLabel")}
             </label>
             <input
               id="email"
@@ -193,7 +197,7 @@ export default function RegisterPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
+              placeholder={t("auth.register.emailPlaceholder")}
               className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none focus:ring-1 ${
                 fieldErrors.email
                   ? "border-red-400 focus:border-red-400 focus:ring-red-400"
@@ -211,7 +215,7 @@ export default function RegisterPage() {
               htmlFor="password"
               className="mb-1.5 block text-sm font-medium text-gray-700"
             >
-              Password
+              {t("auth.register.passwordLabel")}
             </label>
             <div className="relative">
               <input
@@ -220,8 +224,8 @@ export default function RegisterPage() {
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
-                className={`w-full rounded-lg border px-3 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none focus:ring-1 ${
+                placeholder={t("auth.register.passwordPlaceholder")}
+                className={`w-full rounded-lg border ps-3 pe-10 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none focus:ring-1 ${
                   fieldErrors.password
                     ? "border-red-400 focus:border-red-400 focus:ring-red-400"
                     : "border-gray-300 focus:border-gray-900 focus:ring-gray-900"
@@ -230,8 +234,8 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                aria-label={t(showPassword ? "auth.register.hidePassword" : "auth.register.showPassword")}
+                className="absolute inset-y-0 end-0 flex items-center px-3 text-gray-400 hover:text-gray-600 focus:outline-none"
               >
                 {showPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
               </button>
@@ -247,7 +251,7 @@ export default function RegisterPage() {
               htmlFor="confirmPassword"
               className="mb-1.5 block text-sm font-medium text-gray-700"
             >
-              Confirm password
+              {t("auth.register.confirmPasswordLabel")}
             </label>
             <div className="relative">
               <input
@@ -256,8 +260,8 @@ export default function RegisterPage() {
                 autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter your password"
-                className={`w-full rounded-lg border px-3 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none focus:ring-1 ${
+                placeholder={t("auth.register.confirmPasswordPlaceholder")}
+                className={`w-full rounded-lg border ps-3 pe-10 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none focus:ring-1 ${
                   fieldErrors.confirmPassword
                     ? "border-red-400 focus:border-red-400 focus:ring-red-400"
                     : "border-gray-300 focus:border-gray-900 focus:ring-gray-900"
@@ -266,8 +270,8 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirm((v) => !v)}
-                aria-label={showConfirm ? "Hide password" : "Show password"}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                aria-label={t(showConfirm ? "auth.register.hidePassword" : "auth.register.showPassword")}
+                className="absolute inset-y-0 end-0 flex items-center px-3 text-gray-400 hover:text-gray-600 focus:outline-none"
               >
                 {showConfirm ? <EyeClosedIcon /> : <EyeOpenIcon />}
               </button>
@@ -297,10 +301,10 @@ export default function RegisterPage() {
             {loading ? (
               <>
                 <Spinner />
-                Creating account…
+                {t("auth.register.submitting")}
               </>
             ) : (
-              "Create account"
+              t("auth.register.submitButton")
             )}
           </button>
         </form>
@@ -308,12 +312,12 @@ export default function RegisterPage() {
 
       {/* Login link */}
       <p className="mt-6 text-center text-sm text-gray-500">
-        Already have an account?{" "}
+        {t("auth.register.hasAccount")}{" "}
         <Link
           href="/login"
           className="font-medium text-gray-900 underline-offset-2 hover:underline"
         >
-          Sign in
+          {t("auth.register.signIn")}
         </Link>
       </p>
     </div>
