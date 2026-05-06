@@ -7,6 +7,7 @@ import type { LeadClassification } from '@/types';
 import { ScoreRing } from '@/components/ui/ScoreRing';
 import { Badge, classificationVariant, enrichmentVariant } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { useLocale } from '@/lib/i18n';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -16,7 +17,7 @@ type SortKey       = 'score-desc' | 'score-asc' | 'name-asc' | 'date-desc';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const CLASS_FILTERS: ClassFilter[]  = ['All', 'Hot', 'Warm', 'Cold', 'Reject', 'Unclassified'];
+const CLASS_FILTERS: ClassFilter[]   = ['All', 'Hot', 'Warm', 'Cold', 'Reject', 'Unclassified'];
 const ENRICH_FILTERS: EnrichFilter[] = ['All', 'Enriched', 'Partial', 'Failed'];
 
 const CLASS_DOT: Record<string, string> = {
@@ -27,13 +28,6 @@ const CLASS_DOT: Record<string, string> = {
   Unclassified: 'bg-slate-300',
   All:          'bg-indigo-400',
 };
-
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: 'score-desc', label: 'Score: High → Low' },
-  { value: 'score-asc',  label: 'Score: Low → High' },
-  { value: 'name-asc',   label: 'Name: A → Z' },
-  { value: 'date-desc',  label: 'Date: Newest first' },
-];
 
 // ── Classification pill ────────────────────────────────────────────────────────
 
@@ -76,6 +70,30 @@ function ClassPill({
 
 export default function LeadsPage() {
   const router = useRouter();
+  const { t } = useLocale();
+
+  const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+    { value: 'score-desc', label: t('pages.leads.sortScoreDesc') },
+    { value: 'score-asc',  label: t('pages.leads.sortScoreAsc') },
+    { value: 'name-asc',   label: t('pages.leads.sortNameAsc') },
+    { value: 'date-desc',  label: t('pages.leads.sortDateDesc') },
+  ];
+
+  const CLASS_LABEL: Record<ClassFilter, string> = {
+    All:          t('pages.leads.filterAll'),
+    Hot:          t('pages.leads.filterHot'),
+    Warm:         t('pages.leads.filterWarm'),
+    Cold:         t('pages.leads.filterCold'),
+    Reject:       t('pages.leads.filterReject'),
+    Unclassified: t('pages.leads.filterUnclassified'),
+  };
+
+  const ENRICH_LABEL: Record<EnrichFilter, string> = {
+    All:      t('pages.leads.allEnrichment'),
+    Enriched: t('pages.leads.enriched'),
+    Partial:  t('pages.leads.partial'),
+    Failed:   t('pages.leads.failed'),
+  };
 
   const [search, setSearch]             = useState('');
   const [classFilter, setClassFilter]   = useState<ClassFilter>('All');
@@ -133,22 +151,22 @@ export default function LeadsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900">
-            Leads
+            {t('pages.leads.title')}
             <span className="ml-2 text-base font-normal text-slate-400">({DUMMY_LEADS.length})</span>
           </h1>
           <p className="mt-0.5 text-sm text-slate-500">
-            Review and manage every lead in your pipeline.
+            {t('pages.leads.description')}
           </p>
         </div>
         <button
           disabled
-          title="Import coming soon"
+          title={t('pages.leads.importComingSoon')}
           className="hidden shrink-0 cursor-not-allowed items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white opacity-40 sm:inline-flex"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
-          Import Leads
+          {t('pages.leads.importLeads')}
         </button>
       </div>
 
@@ -157,7 +175,7 @@ export default function LeadsPage() {
         {CLASS_FILTERS.map((f) => (
           <ClassPill
             key={f}
-            label={f}
+            label={CLASS_LABEL[f]}
             count={classCount(f)}
             isActive={classFilter === f}
             dotColor={CLASS_DOT[f] ?? 'bg-slate-400'}
@@ -181,7 +199,7 @@ export default function LeadsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name, email, company…"
+            placeholder={t('pages.leads.searchPlaceholder')}
             className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-9 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           {search && (
@@ -240,7 +258,7 @@ export default function LeadsPage() {
                   : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
-              {f === 'All' ? 'All enrichment' : f}
+              {ENRICH_LABEL[f]}
             </button>
           ))}
         </div>
@@ -250,7 +268,7 @@ export default function LeadsPage() {
             onClick={clearFilters}
             className="text-xs font-medium text-slate-500 transition-colors hover:text-indigo-600"
           >
-            Clear filters
+            {t('pages.leads.clearFilters')}
           </button>
         )}
       </div>
@@ -259,11 +277,11 @@ export default function LeadsPage() {
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         {leads.length === 0 ? (
           <EmptyState
-            title={search ? `No results for "${search}"` : 'No leads in this view'}
+            title={search ? t('pages.leads.emptySearchTitle').replace('{search}', search) : t('pages.leads.emptyTitle')}
             description={
               hasActiveFilters
-                ? 'Try adjusting your filters or search term.'
-                : 'Import leads or adjust your filters to see results here.'
+                ? t('pages.leads.emptyFilterDesc')
+                : t('pages.leads.emptyDesc')
             }
             icon={
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -276,7 +294,7 @@ export default function LeadsPage() {
                   onClick={clearFilters}
                   className="text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-800"
                 >
-                  Clear all filters
+                  {t('pages.leads.clearAllFilters')}
                 </button>
               ) : undefined
             }
@@ -289,42 +307,42 @@ export default function LeadsPage() {
 
                   {/* Name — always visible */}
                   <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    Full Name
+                    {t('pages.leads.colFullName')}
                   </th>
 
                   {/* Job Title — sm+ */}
                   <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 sm:table-cell">
-                    Job Title
+                    {t('pages.leads.colJobTitle')}
                   </th>
 
                   {/* Company — md+ */}
                   <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 md:table-cell">
-                    Company
+                    {t('pages.leads.colCompany')}
                   </th>
 
                   {/* Email — lg+ */}
                   <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">
-                    Email
+                    {t('pages.leads.colEmail')}
                   </th>
 
                   {/* LinkedIn — xl+ */}
                   <th className="hidden px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500 xl:table-cell">
-                    LinkedIn
+                    {t('pages.leads.colLinkedIn')}
                   </th>
 
                   {/* Score — always */}
                   <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    Score
+                    {t('pages.leads.colScore')}
                   </th>
 
                   {/* Classification — always */}
                   <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    Classification
+                    {t('pages.leads.colClassification')}
                   </th>
 
                   {/* Enrichment — md+ */}
                   <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 md:table-cell">
-                    Enrichment
+                    {t('pages.leads.colEnrichment')}
                   </th>
 
                   {/* Actions — always */}
@@ -448,17 +466,16 @@ export default function LeadsPage() {
       {leads.length > 0 && (
         <div className="flex items-center justify-between text-xs text-slate-400">
           <span>
-            Showing{' '}
-            <span className="font-semibold text-slate-600">{leads.length}</span>
-            {' '}of{' '}
-            <span className="font-semibold text-slate-600">{DUMMY_LEADS.length}</span> leads
+            {t('pages.leads.showingCount')
+              .replace('{visible}', String(leads.length))
+              .replace('{total}', String(DUMMY_LEADS.length))}
           </span>
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
               className="font-medium text-indigo-500 transition-colors hover:text-indigo-700"
             >
-              Clear filters
+              {t('pages.leads.clearFilters')}
             </button>
           )}
         </div>

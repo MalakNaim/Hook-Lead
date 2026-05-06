@@ -11,6 +11,7 @@ import {
 import { ScoreRing } from '@/components/ui/ScoreRing';
 import { Badge, classificationVariant } from '@/components/ui/Badge';
 import { Card, CardHeader } from '@/components/ui/Card';
+import { useLocale } from '@/lib/i18n';
 
 // ── KPI Card ───────────────────────────────────────────────────────────────────
 
@@ -71,9 +72,10 @@ interface PipelineCardProps {
   barColor: string;
   dotColor: string;
   labelColor: string;
+  pctLabel: string;
 }
 
-function PipelineCard({ label, count, total, barColor, dotColor, labelColor }: PipelineCardProps) {
+function PipelineCard({ label, count, total, barColor, dotColor, labelColor, pctLabel }: PipelineCardProps) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
@@ -82,7 +84,7 @@ function PipelineCard({ label, count, total, barColor, dotColor, labelColor }: P
         <span className={`text-xs font-semibold uppercase tracking-wider ${labelColor}`}>{label}</span>
       </div>
       <p className="text-3xl font-bold text-slate-900">{count}</p>
-      <p className="mt-0.5 text-xs text-slate-400">{pct}% of all leads</p>
+      <p className="mt-0.5 text-xs text-slate-400">{pct}% {pctLabel}</p>
       <div className="mt-3 w-full bg-slate-100 rounded-full h-1.5">
         <div
           className={`h-1.5 rounded-full transition-all duration-500 ${barColor}`}
@@ -202,6 +204,8 @@ function ActivityItem({
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const { t } = useLocale();
+
   const recentLeads = [...DUMMY_LEADS]
     .sort((a, b) => new Date(b.importedAt).getTime() - new Date(a.importedAt).getTime())
     .slice(0, 6);
@@ -218,7 +222,9 @@ export default function DashboardPage() {
       {/* ── Welcome ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Welcome back, Yazan 👋</h1>
+          <h1 className="text-xl font-bold text-slate-900">
+            {t('pages.dashboard.welcomeBack').replace('{name}', 'Yazan')}
+          </h1>
           <p className="mt-0.5 text-sm text-slate-500">{today}</p>
         </div>
         <Link
@@ -228,16 +234,16 @@ export default function DashboardPage() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-5.477-3.765M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a4 4 0 015.477-3.765M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          View All Leads
+          {t('pages.dashboard.viewAllLeads')}
         </Link>
       </div>
 
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
-          label="Total Leads"
+          label={t('pages.dashboard.totalLeads')}
           value={DASHBOARD_STATS.totalLeads}
-          sub="All time"
+          sub={t('pages.dashboard.allTime')}
           iconBg="bg-indigo-50 text-indigo-600"
           trend={{ label: '+3 this week', positive: true }}
           icon={
@@ -247,11 +253,11 @@ export default function DashboardPage() {
           }
         />
         <KpiCard
-          label="Qualified Leads"
+          label={t('pages.dashboard.qualifiedLeads')}
           value={DASHBOARD_STATS.qualifiedLeads}
-          sub="Status: Qualified"
+          sub={t('pages.dashboard.statusQualified')}
           iconBg="bg-emerald-50 text-emerald-600"
-          trend={{ label: `${DASHBOARD_STATS.conversionRate}% of total`, positive: true }}
+          trend={{ label: `${DASHBOARD_STATS.conversionRate}% ${t('pages.dashboard.pctOfTotal')}`, positive: true }}
           icon={
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -259,9 +265,9 @@ export default function DashboardPage() {
           }
         />
         <KpiCard
-          label="Reply Rate"
+          label={t('pages.dashboard.replyRate')}
           value={`${DASHBOARD_STATS.replyRate}%`}
-          sub="Across all outreach"
+          sub={t('pages.dashboard.acrossAllOutreach')}
           iconBg="bg-sky-50 text-sky-600"
           trend={{ label: '+5% vs last month', positive: true }}
           icon={
@@ -271,9 +277,9 @@ export default function DashboardPage() {
           }
         />
         <KpiCard
-          label="Conversion Rate"
+          label={t('pages.dashboard.conversion')}
           value={`${DASHBOARD_STATS.conversionRate}%`}
-          sub="Lead → Qualified"
+          sub={t('pages.dashboard.qualifiedTotal')}
           iconBg="bg-amber-50 text-amber-600"
           trend={{ label: '+2% vs last month', positive: true }}
           icon={
@@ -288,48 +294,52 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-sm font-semibold text-slate-800">Lead Pipeline</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Classification breakdown</p>
+            <h2 className="text-sm font-semibold text-slate-800">{t('pages.dashboard.leadPipeline')}</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{t('pages.dashboard.classificationBreakdown')}</p>
           </div>
           <Link
             href="/dashboard/leads"
             className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
           >
-            View all →
+            {t('pages.dashboard.viewAllArrow')}
           </Link>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <PipelineCard
-            label="Hot"
+            label={t('pages.dashboard.hot')}
             count={PIPELINE_BREAKDOWN.hot}
             total={DASHBOARD_STATS.totalLeads}
             barColor="bg-rose-500"
             dotColor="bg-rose-500"
             labelColor="text-rose-600"
+            pctLabel={t('pages.dashboard.pctOfAllLeads')}
           />
           <PipelineCard
-            label="Warm"
+            label={t('pages.dashboard.warm')}
             count={PIPELINE_BREAKDOWN.warm}
             total={DASHBOARD_STATS.totalLeads}
             barColor="bg-orange-400"
             dotColor="bg-orange-400"
             labelColor="text-orange-600"
+            pctLabel={t('pages.dashboard.pctOfAllLeads')}
           />
           <PipelineCard
-            label="Cold"
+            label={t('pages.dashboard.cold')}
             count={PIPELINE_BREAKDOWN.cold}
             total={DASHBOARD_STATS.totalLeads}
             barColor="bg-sky-400"
             dotColor="bg-sky-400"
             labelColor="text-sky-600"
+            pctLabel={t('pages.dashboard.pctOfAllLeads')}
           />
           <PipelineCard
-            label="Reject"
+            label={t('pages.dashboard.reject')}
             count={PIPELINE_BREAKDOWN.reject}
             total={DASHBOARD_STATS.totalLeads}
             barColor="bg-slate-300"
             dotColor="bg-slate-400"
             labelColor="text-slate-500"
+            pctLabel={t('pages.dashboard.pctOfAllLeads')}
           />
         </div>
       </div>
@@ -340,14 +350,14 @@ export default function DashboardPage() {
         <Card padding={false} className="lg:col-span-3 overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">Recent Leads</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Latest imports</p>
+              <h2 className="text-sm font-semibold text-slate-900">{t('pages.dashboard.recentLeadsTitle')}</h2>
+              <p className="text-xs text-slate-500 mt-0.5">{t('pages.dashboard.latestImports')}</p>
             </div>
             <Link
               href="/dashboard/leads"
               className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
             >
-              View all →
+              {t('pages.dashboard.viewAllArrow')}
             </Link>
           </div>
           <div className="overflow-x-auto">
@@ -355,16 +365,16 @@ export default function DashboardPage() {
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/60">
                   <th className="px-6 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    Lead
+                    {t('pages.dashboard.colLead')}
                   </th>
                   <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">
-                    Job Title
+                    {t('pages.dashboard.colJobTitle')}
                   </th>
                   <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    Stage
+                    {t('pages.dashboard.colStage')}
                   </th>
                   <th className="px-6 py-2.5 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    Score
+                    {t('pages.dashboard.colScore')}
                   </th>
                 </tr>
               </thead>
@@ -418,12 +428,12 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 flex flex-col gap-4">
           {/* Quick Actions */}
           <Card>
-            <CardHeader title="Quick Actions" description="Jump to key workflows" />
+            <CardHeader title={t('pages.dashboard.quickActionsTitle')} description={t('pages.dashboard.quickActionsDesc')} />
             <div className="space-y-2">
               <QuickAction
                 href="/dashboard/icp"
-                label="Create ICP"
-                description="Define your ideal customer profile"
+                label={t('pages.dashboard.actionCreateICP')}
+                description={t('pages.dashboard.actionCreateICPDesc')}
                 icon={
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <circle cx="12" cy="12" r="9" strokeLinecap="round" />
@@ -434,8 +444,8 @@ export default function DashboardPage() {
               />
               <QuickAction
                 href="/dashboard/import"
-                label="Import Leads"
-                description="Upload a CSV or connect a source"
+                label={t('pages.dashboard.actionImportLeads')}
+                description={t('pages.dashboard.actionImportLeadsDesc')}
                 icon={
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -444,8 +454,8 @@ export default function DashboardPage() {
               />
               <QuickAction
                 href="/dashboard/leads"
-                label="Review Hot Leads"
-                description="Leads with ICP score ≥ 70"
+                label={t('pages.dashboard.actionReviewHotLeads')}
+                description={t('pages.dashboard.actionReviewHotLeadsDesc')}
                 icon={
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
@@ -455,8 +465,8 @@ export default function DashboardPage() {
               />
               <QuickAction
                 href="/dashboard/outreach"
-                label="Create Outreach Sequence"
-                description="Draft and send personalized emails"
+                label={t('pages.dashboard.actionCreateOutreach')}
+                description={t('pages.dashboard.actionCreateOutreachDesc')}
                 icon={
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -468,7 +478,7 @@ export default function DashboardPage() {
 
           {/* Activity Feed */}
           <Card>
-            <CardHeader title="Recent Activity" description="Latest pipeline events" />
+            <CardHeader title={t('pages.dashboard.recentActivityTitle')} description={t('pages.dashboard.recentActivityDesc')} />
             <div>
               {ACTIVITY_FEED.map((item) => (
                 <ActivityItem key={item.id} type={item.type} text={item.text} time={item.time} />

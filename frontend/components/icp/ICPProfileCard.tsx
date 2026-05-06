@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { ICPProfile } from '@/types';
+import { useLocale } from '@/lib/i18n';
 
 interface ICPProfileCardProps {
   profile: ICPProfile;
@@ -22,6 +23,7 @@ export function ICPProfileCard({
   onDelete,
   onSetActive,
 }: ICPProfileCardProps) {
+  const { t } = useLocale();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const updatedDate = new Date(profile.updatedAt).toLocaleDateString('en-US', {
@@ -29,6 +31,9 @@ export function ICPProfileCard({
     day: 'numeric',
     year: 'numeric',
   });
+
+  const painCount = profile.painPoints.length;
+  const triggerCount = profile.buyingTriggers.length;
 
   return (
     <div
@@ -56,18 +61,20 @@ export function ICPProfileCard({
                       clipRule="evenodd"
                     />
                   </svg>
-                  Active
+                  {t('pages.icpCard.active')}
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-xs text-slate-400">Updated {updatedDate}</p>
+            <p className="mt-0.5 text-xs text-slate-400">
+              {t('pages.icpCard.updatedOn').replace('{date}', updatedDate)}
+            </p>
           </div>
 
           {/* Action icon row: View · Edit · Duplicate · Delete */}
           <div className="flex items-center gap-0.5 shrink-0">
             <button
               onClick={() => onView(profile)}
-              title="View profile"
+              title={t('pages.icpCard.viewTitle')}
               className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -77,7 +84,7 @@ export function ICPProfileCard({
             </button>
             <button
               onClick={() => onEdit(profile)}
-              title="Edit profile"
+              title={t('pages.icpCard.editTitle')}
               className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -90,7 +97,7 @@ export function ICPProfileCard({
             </button>
             <button
               onClick={() => onDuplicate(profile)}
-              title="Duplicate profile"
+              title={t('pages.icpCard.duplicateTitle')}
               className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -103,7 +110,7 @@ export function ICPProfileCard({
             </button>
             <button
               onClick={() => setConfirmDelete(true)}
-              title="Delete profile"
+              title={t('pages.icpCard.deleteBtn')}
               className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -122,7 +129,7 @@ export function ICPProfileCard({
           {/* Industries */}
           <div>
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-              Industries
+              {t('pages.icpCard.industries')}
             </p>
             <div className="flex flex-wrap gap-1">
               {profile.industries.slice(0, 2).map((ind) => (
@@ -135,7 +142,7 @@ export function ICPProfileCard({
               ))}
               {profile.industries.length > 2 && (
                 <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-xs">
-                  +{profile.industries.length - 2} more
+                  {t('pages.icpCard.more').replace('{count}', String(profile.industries.length - 2))}
                 </span>
               )}
             </div>
@@ -144,20 +151,20 @@ export function ICPProfileCard({
           {/* Job Titles */}
           <div>
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-              Job Titles
+              {t('pages.icpCard.jobTitles')}
             </p>
             <div className="flex flex-wrap gap-1">
-              {profile.jobTitles.slice(0, 2).map((t) => (
+              {profile.jobTitles.slice(0, 2).map((title) => (
                 <span
-                  key={t}
+                  key={title}
                   className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs font-medium"
                 >
-                  {t}
+                  {title}
                 </span>
               ))}
               {profile.jobTitles.length > 2 && (
                 <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-xs">
-                  +{profile.jobTitles.length - 2} more
+                  {t('pages.icpCard.more').replace('{count}', String(profile.jobTitles.length - 2))}
                 </span>
               )}
             </div>
@@ -167,7 +174,7 @@ export function ICPProfileCard({
           {profile.locations.length > 0 && (
             <div>
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                Locations
+                {t('pages.icpCard.locations')}
               </p>
               <div className="flex flex-wrap gap-1">
                 {profile.locations.slice(0, 2).map((loc) => (
@@ -184,7 +191,7 @@ export function ICPProfileCard({
                 ))}
                 {profile.locations.length > 2 && (
                   <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-xs">
-                    +{profile.locations.length - 2}
+                    {t('pages.icpCard.more').replace('{count}', String(profile.locations.length - 2))}
                   </span>
                 )}
               </div>
@@ -195,7 +202,7 @@ export function ICPProfileCard({
           <div className="grid grid-cols-2 gap-2 pt-1">
             <div>
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                Company Size
+                {t('pages.icpCard.companySize')}
               </p>
               <p className="text-xs font-semibold text-slate-700">
                 {profile.companySizeMin.toLocaleString()}–
@@ -205,7 +212,7 @@ export function ICPProfileCard({
             </div>
             <div>
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                Budget / mo
+                {t('pages.icpCard.budgetPerMonth')}
               </p>
               <p className="text-xs font-semibold text-slate-700">
                 ${profile.budgetMin.toLocaleString()}–${profile.budgetMax.toLocaleString()}
@@ -219,14 +226,18 @@ export function ICPProfileCard({
               <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
-              {profile.painPoints.length} pain point{profile.painPoints.length !== 1 ? 's' : ''}
+              {painCount === 1
+                ? t('pages.icpCard.painPoints').replace('{count}', '1')
+                : t('pages.icpCard.painPointsPlural').replace('{count}', String(painCount))}
             </span>
             <span className="text-slate-200">·</span>
             <span className="flex items-center gap-1">
               <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              {profile.buyingTriggers.length} trigger{profile.buyingTriggers.length !== 1 ? 's' : ''}
+              {triggerCount === 1
+                ? t('pages.icpCard.triggers').replace('{count}', '1')
+                : t('pages.icpCard.triggersPlural').replace('{count}', String(triggerCount))}
             </span>
             <span className="text-slate-200">·</span>
             <span className="flex items-center gap-1">
@@ -247,7 +258,7 @@ export function ICPProfileCard({
                   />
                 </svg>
               )}
-              {profile.decisionMaker ? 'DM only' : 'Any seniority'}
+              {profile.decisionMaker ? t('pages.icpCard.dmOnly') : t('pages.icpCard.anySeniority')}
             </span>
           </div>
         </div>
@@ -257,14 +268,14 @@ export function ICPProfileCard({
       <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/60">
         {isActive ? (
           <p className="text-center text-xs text-slate-400 py-0.5">
-            Currently scoring leads against this profile
+            {t('pages.icpCard.scoringAgainst')}
           </p>
         ) : (
           <button
             onClick={() => onSetActive(profile.id)}
             className="w-full py-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
           >
-            Set as Active Profile
+            {t('pages.icpCard.setAsActive')}
           </button>
         )}
       </div>
@@ -287,14 +298,16 @@ export function ICPProfileCard({
               />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-slate-800">Delete &ldquo;{profile.name}&rdquo;?</p>
-          <p className="text-xs text-slate-500 mt-1 mb-4">This action cannot be undone.</p>
+          <p className="text-sm font-semibold text-slate-800">
+            {t('pages.icpCard.deleteTitle').replace('{name}', profile.name)}
+          </p>
+          <p className="text-xs text-slate-500 mt-1 mb-4">{t('pages.icpCard.deleteDesc')}</p>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setConfirmDelete(false)}
               className="px-3.5 py-1.5 border border-slate-300 bg-white text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={() => {
@@ -303,7 +316,7 @@ export function ICPProfileCard({
               }}
               className="px-3.5 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700 transition-colors"
             >
-              Yes, delete
+              {t('common.yesDelete')}
             </button>
           </div>
         </div>

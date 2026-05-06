@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useLocale } from '@/lib/i18n';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -216,6 +217,7 @@ function StatusBadge({ status }: { status: SequenceStatus }) {
 // ── Rule Reminder Banner ───────────────────────────────────────────────────────
 
 function RuleBanner({ onDismiss }: { onDismiss: () => void }) {
+  const { t } = useLocale();
   return (
     <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5">
       <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100">
@@ -224,25 +226,25 @@ function RuleBanner({ onDismiss }: { onDismiss: () => void }) {
         </svg>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-amber-800">Outreach rules</p>
+        <p className="text-sm font-semibold text-amber-800">{t('pages.outreach.rulesTitle')}</p>
         <ul className="mt-1 space-y-0.5 text-xs text-amber-700">
           <li className="flex items-center gap-1.5">
             <svg className="h-3.5 w-3.5 shrink-0 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
-            Never contact leads classified as <strong className="font-semibold">Reject</strong>.
+            {t('pages.outreach.ruleNeverReject')}
           </li>
           <li className="flex items-center gap-1.5">
             <svg className="h-3.5 w-3.5 shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            Enrol only <strong className="font-semibold">Hot</strong> and <strong className="font-semibold">Warm</strong> leads into active sequences.
+            {t('pages.outreach.ruleEnrolHotWarm')}
           </li>
           <li className="flex items-center gap-1.5">
             <svg className="h-3.5 w-3.5 shrink-0 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            Cold leads may receive a single introduction — no follow-up sequences.
+            {t('pages.outreach.ruleColdSingle')}
           </li>
         </ul>
       </div>
@@ -301,9 +303,10 @@ function SequenceCard({
   onToggle: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useLocale();
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const canToggle  = seq.status === 'Active' || seq.status === 'Paused';
-  const isActive   = seq.status === 'Active';
+  const canToggle = seq.status === 'Active' || seq.status === 'Paused';
+  const isActive  = seq.status === 'Active';
 
   return (
     <div className="relative flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
@@ -334,25 +337,27 @@ function SequenceCard({
         <div className="grid grid-cols-3 gap-2 rounded-lg bg-slate-50 px-3 py-2.5 text-center text-xs">
           <div>
             <p className="font-bold text-slate-800 tabular-nums">{seq.steps.length}</p>
-            <p className="text-slate-400">Steps</p>
+            <p className="text-slate-400">{t('pages.outreach.steps')}</p>
           </div>
           <div>
             <p className="font-bold text-slate-800 tabular-nums">{seq.leadsEnrolled}</p>
-            <p className="text-slate-400">Enrolled</p>
+            <p className="text-slate-400">{t('pages.outreach.enrolled')}</p>
           </div>
           <div>
             <p className={`font-bold tabular-nums ${seq.replyRate > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
               {seq.replyRate > 0 ? `${seq.replyRate}%` : '—'}
             </p>
-            <p className="text-slate-400">Reply rate</p>
+            <p className="text-slate-400">{t('pages.outreach.replyRate')}</p>
           </div>
         </div>
 
-        {/* Reply rate bar (only when active/paused and has data) */}
+        {/* Reply rate bar */}
         {seq.replyRate > 0 && (
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Reply Rate</span>
+              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+                {t('pages.outreach.replyRate')}
+              </span>
               <span className="text-[10px] font-semibold text-emerald-600 tabular-nums">{seq.replyRate}%</span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
@@ -367,13 +372,13 @@ function SequenceCard({
         {/* Footer */}
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
           <p className="text-[11px] text-slate-400">
-            Updated {fmtDate(seq.updatedAt)}
+            {t('pages.outreach.updated').replace('{date}', fmtDate(seq.updatedAt))}
           </p>
           <div className="flex items-center gap-1">
             {/* Preview */}
             <button
               onClick={onPreview}
-              title="Preview emails"
+              title={t('pages.outreach.previewEmails')}
               className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -386,7 +391,7 @@ function SequenceCard({
             {canToggle && (
               <button
                 onClick={onToggle}
-                title={isActive ? 'Pause sequence' : 'Resume sequence'}
+                title={isActive ? t('pages.outreach.pauseSeq') : t('pages.outreach.resumeSeq')}
                 className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
                   isActive
                     ? 'text-slate-400 hover:bg-amber-50 hover:text-amber-600'
@@ -410,7 +415,7 @@ function SequenceCard({
             {/* Delete */}
             <button
               onClick={() => setConfirmDelete(true)}
-              title="Delete sequence"
+              title={t('pages.outreach.deleteSeq')}
               className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -429,20 +434,22 @@ function SequenceCard({
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-slate-800">Delete &ldquo;{seq.name}&rdquo;?</p>
-          <p className="mt-1 text-xs text-slate-500">This cannot be undone.</p>
+          <p className="text-sm font-semibold text-slate-800">
+            {t('pages.outreach.deleteTitle').replace('{name}', seq.name)}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">{t('pages.outreach.deleteDesc')}</p>
           <div className="mt-4 flex items-center gap-2">
             <button
               onClick={() => setConfirmDelete(false)}
               className="rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={() => { onDelete(); setConfirmDelete(false); }}
               className="rounded-lg bg-red-600 px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-700"
             >
-              Yes, delete
+              {t('pages.outreach.yesDelete')}
             </button>
           </div>
         </div>
@@ -462,6 +469,7 @@ function EmailPreviewPanel({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   const [expandedStep, setExpandedStep] = useState<number>(0);
 
   if (!seq) return null;
@@ -491,13 +499,20 @@ function EmailPreviewPanel({
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <StatusBadge status={seq.status} />
               <span className="text-xs text-slate-400">
-                {seq.steps.length} step{seq.steps.length !== 1 ? 's' : ''}
+                {seq.steps.length}{' '}
+                {seq.steps.length === 1
+                  ? t('pages.outreach.previewStep')
+                  : t('pages.outreach.previewStepPlural')}
               </span>
               {seq.leadsEnrolled > 0 && (
-                <span className="text-xs text-slate-400">· {seq.leadsEnrolled} enrolled</span>
+                <span className="text-xs text-slate-400">
+                  · {seq.leadsEnrolled} {t('pages.outreach.enrolled')}
+                </span>
               )}
               {seq.replyRate > 0 && (
-                <span className="text-xs font-semibold text-emerald-600">· {seq.replyRate}% reply rate</span>
+                <span className="text-xs font-semibold text-emerald-600">
+                  · {seq.replyRate}% {t('pages.outreach.replyRate')}
+                </span>
               )}
             </div>
           </div>
@@ -519,7 +534,7 @@ function EmailPreviewPanel({
               <circle cx="12" cy="12" r="9" strokeLinecap="round" />
               <circle cx="12" cy="12" r="4" strokeLinecap="round" />
             </svg>
-            <span className="font-semibold">Target ICP:</span>
+            <span className="font-semibold">{t('pages.outreach.previewTargetICP')}</span>
             <span>{seq.targetICP}</span>
           </div>
         </div>
@@ -528,7 +543,7 @@ function EmailPreviewPanel({
         <div className="flex-1 overflow-y-auto">
           <div className="px-6 py-5">
             <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Email Sequence · {seq.steps.length} steps
+              {t('pages.outreach.previewEmailSeq').replace('{count}', String(seq.steps.length))}
             </p>
 
             <div className="relative">
@@ -559,7 +574,7 @@ function EmailPreviewPanel({
                           <div className="flex items-center justify-between gap-2">
                             <div className="min-w-0">
                               <p className="text-[10px] font-semibold uppercase tracking-wider text-indigo-500 mb-0.5">
-                                Day {step.day}
+                                {t('pages.outreach.previewDay').replace('{n}', String(step.day))}
                               </p>
                               <p className="truncate text-sm font-semibold text-slate-800">
                                 {step.subject}
@@ -606,17 +621,17 @@ function EmailPreviewPanel({
               onClick={onClose}
               className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
             >
-              Close
+              {t('pages.outreach.previewClose')}
             </button>
             <button
               className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-400 opacity-60"
-              title="Coming soon"
+              title={t('common.comingSoon')}
               disabled
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
-              Edit Sequence
+              {t('pages.outreach.previewEdit')}
             </button>
           </div>
         </div>
@@ -636,11 +651,12 @@ function CreateSequencePanel({
   onClose: () => void;
   onSave: (seq: OutreachSequence) => void;
 }) {
-  const [name, setName]         = useState('');
-  const [icp, setIcp]           = useState(ICP_OPTIONS[0]);
+  const { t } = useLocale();
+  const [name, setName]           = useState('');
+  const [icp, setIcp]             = useState(ICP_OPTIONS[0]);
   const [stepCount, setStepCount] = useState(3);
-  const [error, setError]       = useState('');
-  const [saving, setSaving]     = useState(false);
+  const [error, setError]         = useState('');
+  const [saving, setSaving]       = useState(false);
 
   function reset() {
     setName('');
@@ -655,7 +671,7 @@ function CreateSequencePanel({
   }
 
   function handleSave() {
-    if (!name.trim()) { setError('Sequence name is required'); return; }
+    if (!name.trim()) { setError(t('pages.outreach.createNameRequired')); return; }
     setSaving(true);
     setTimeout(() => {
       onSave({
@@ -691,12 +707,12 @@ function CreateSequencePanel({
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-6 py-4">
           <div>
-            <h2 className="text-base font-semibold text-slate-900">New Sequence</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Create a new email outreach sequence</p>
+            <h2 className="text-base font-semibold text-slate-900">{t('pages.outreach.createTitle')}</h2>
+            <p className="mt-0.5 text-xs text-slate-500">{t('pages.outreach.createSubtitle')}</p>
           </div>
           <button
             onClick={handleClose}
-            aria-label="Close"
+            aria-label={t('common.close')}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -711,14 +727,14 @@ function CreateSequencePanel({
             {/* Name */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="seq-name">
-                Sequence Name <span className="text-red-500">*</span>
+                {t('pages.outreach.createNameLabel')} <span className="text-red-500">*</span>
               </label>
               <input
                 id="seq-name"
                 type="text"
                 value={name}
                 onChange={(e) => { setName(e.target.value); setError(''); }}
-                placeholder="e.g. Hot Leads — Q3 Campaign"
+                placeholder={t('pages.outreach.createNamePlaceholder')}
                 className={`w-full rounded-lg border px-3 py-2 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                   error ? 'border-red-400 bg-red-50' : 'border-slate-300 hover:border-slate-400'
                 }`}
@@ -729,7 +745,7 @@ function CreateSequencePanel({
             {/* Target ICP */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="seq-icp">
-                Target ICP
+                {t('pages.outreach.createTargetICP')}
               </label>
               <div className="relative">
                 <select
@@ -746,13 +762,13 @@ function CreateSequencePanel({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
-              <p className="mt-1.5 text-xs text-slate-500">Leads must match this ICP to be enrolled</p>
+              <p className="mt-1.5 text-xs text-slate-500">{t('pages.outreach.createTargetICPDesc')}</p>
             </div>
 
             {/* Step count */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="seq-steps">
-                Number of Steps
+                {t('pages.outreach.createNumSteps')}
               </label>
               <input
                 id="seq-steps"
@@ -763,13 +779,13 @@ function CreateSequencePanel({
                 onChange={(e) => setStepCount(Math.max(1, Math.min(10, Number(e.target.value))))}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 transition-colors hover:border-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <p className="mt-1.5 text-xs text-slate-500">Each step is a separate email. Steps are spaced automatically.</p>
+              <p className="mt-1.5 text-xs text-slate-500">{t('pages.outreach.createNumStepsDesc')}</p>
             </div>
 
             {/* Preview of step timeline */}
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Step schedule preview
+                {t('pages.outreach.createStepSchedule')}
               </p>
               <div className="space-y-1.5">
                 {genSteps(stepCount).map((step, i) => (
@@ -777,8 +793,10 @@ function CreateSequencePanel({
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
                       {i + 1}
                     </span>
-                    <span className="font-medium">Day {step.day}</span>
-                    <span className="text-slate-400">— placeholder email</span>
+                    <span className="font-medium">
+                      {t('pages.outreach.previewDay').replace('{n}', String(step.day))}
+                    </span>
+                    <span className="text-slate-400">{t('pages.outreach.createPlaceholderEmail')}</span>
                   </div>
                 ))}
               </div>
@@ -789,7 +807,7 @@ function CreateSequencePanel({
               <svg className="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <p>Only <strong>Hot</strong> and <strong>Warm</strong> leads will be enrolled in this sequence. Reject leads are always excluded.</p>
+              <p>{t('pages.outreach.createRuleReminder')}</p>
             </div>
           </div>
         </div>
@@ -798,7 +816,7 @@ function CreateSequencePanel({
         <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-6 py-4">
           <div className="flex items-center justify-between">
             <button onClick={handleClose} className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700">
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleSave}
@@ -811,10 +829,10 @@ function CreateSequencePanel({
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Creating…
+                  {t('pages.outreach.creating')}
                 </>
               ) : (
-                'Create Sequence'
+                t('pages.outreach.createSeqBtn')
               )}
             </button>
           </div>
@@ -844,14 +862,22 @@ function Toast({ message }: { message: string }) {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function OutreachPage() {
-  const [sequences, setSequences]   = useState<OutreachSequence[]>(INITIAL_SEQUENCES);
+  const { t } = useLocale();
+  const [sequences, setSequences]       = useState<OutreachSequence[]>(INITIAL_SEQUENCES);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
-  const [search, setSearch]         = useState('');
-  const [previewSeq, setPreviewSeq] = useState<OutreachSequence | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
+  const [search, setSearch]             = useState('');
+  const [previewSeq, setPreviewSeq]     = useState<OutreachSequence | null>(null);
+  const [previewOpen, setPreviewOpen]   = useState(false);
+  const [createOpen, setCreateOpen]     = useState(false);
   const [rulesDismissed, setRulesDismissed] = useState(false);
-  const [toast, setToast]           = useState<string | null>(null);
+  const [toast, setToast]               = useState<string | null>(null);
+
+  const STATUS_LABEL: Record<StatusFilter, string> = {
+    All:    t('pages.outreach.filterAll'),
+    Active: t('pages.outreach.filterActive'),
+    Paused: t('pages.outreach.filterPaused'),
+    Draft:  t('pages.outreach.filterDraft'),
+  };
 
   function showToast(msg: string) {
     setToast(msg);
@@ -868,22 +894,23 @@ export default function OutreachPage() {
       prev.map((s) => {
         if (s.id !== id) return s;
         const next: SequenceStatus = s.status === 'Active' ? 'Paused' : 'Active';
-        showToast(`"${s.name}" ${next === 'Active' ? 'resumed' : 'paused'}`);
+        const msgKey = next === 'Active' ? 'pages.outreach.toastResumed' : 'pages.outreach.toastPaused';
+        showToast(t(msgKey).replace('{name}', s.name));
         return { ...s, status: next, updatedAt: new Date().toISOString() };
       })
     );
   }
 
   function handleDelete(id: string) {
-    const name = sequences.find((s) => s.id === id)?.name;
+    const name = sequences.find((s) => s.id === id)?.name ?? '';
     setSequences((prev) => prev.filter((s) => s.id !== id));
-    showToast(`"${name}" deleted`);
+    showToast(t('pages.outreach.toastDeleted').replace('{name}', name));
   }
 
   function handleCreate(seq: OutreachSequence) {
     setSequences((prev) => [seq, ...prev]);
     setCreateOpen(false);
-    showToast(`"${seq.name}" created as Draft`);
+    showToast(t('pages.outreach.toastCreated').replace('{name}', seq.name));
   }
 
   const filtered = useMemo(() => {
@@ -915,10 +942,8 @@ export default function OutreachPage() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Outreach Sequences</h1>
-          <p className="mt-0.5 text-sm text-slate-500">
-            Build and manage automated email sequences for your ICP leads.
-          </p>
+          <h1 className="text-xl font-bold text-slate-900">{t('pages.outreach.title')}</h1>
+          <p className="mt-0.5 text-sm text-slate-500">{t('pages.outreach.description')}</p>
         </div>
         <button
           onClick={() => setCreateOpen(true)}
@@ -927,7 +952,7 @@ export default function OutreachPage() {
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          New Sequence
+          {t('pages.outreach.newSequence')}
         </button>
       </div>
 
@@ -939,7 +964,7 @@ export default function OutreachPage() {
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
-          label="Active Sequences"
+          label={t('pages.outreach.activeSeqs')}
           value={activeCount}
           accent="bg-emerald-50 text-emerald-600"
           icon={
@@ -949,7 +974,7 @@ export default function OutreachPage() {
           }
         />
         <StatCard
-          label="Leads Enrolled"
+          label={t('pages.outreach.leadsEnrolled')}
           value={totalEnrolled}
           accent="bg-indigo-50 text-indigo-600"
           icon={
@@ -959,9 +984,9 @@ export default function OutreachPage() {
           }
         />
         <StatCard
-          label="Avg Reply Rate"
+          label={t('pages.outreach.avgReplyRate')}
           value={avgReply > 0 ? `${avgReply}%` : '—'}
-          sub="Active sequences only"
+          sub={t('pages.outreach.activeSeqsOnly')}
           accent="bg-sky-50 text-sky-600"
           icon={
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -970,7 +995,7 @@ export default function OutreachPage() {
           }
         />
         <StatCard
-          label="Drafts Pending"
+          label={t('pages.outreach.draftsPending')}
           value={draftCount}
           accent="bg-amber-50 text-amber-600"
           icon={
@@ -997,7 +1022,7 @@ export default function OutreachPage() {
                   : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
-              {f}
+              {STATUS_LABEL[f]}
               <span
                 className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
                   statusFilter === f ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
@@ -1021,7 +1046,7 @@ export default function OutreachPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search sequences…"
+            placeholder={t('pages.outreach.searchPlaceholder')}
             className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           {search && (
@@ -1047,19 +1072,21 @@ export default function OutreachPage() {
             </svg>
           </div>
           <h3 className="text-sm font-semibold text-slate-700">
-            {search ? `No sequences match "${search}"` : 'No sequences in this view'}
+            {search
+              ? t('pages.outreach.emptySearchTitle').replace('{search}', search)
+              : t('pages.outreach.emptyTitle')}
           </h3>
           <p className="mt-1 text-sm text-slate-500">
             {search || statusFilter !== 'All'
-              ? 'Try adjusting your filters.'
-              : 'Create your first sequence to start automating outreach.'}
+              ? t('pages.outreach.emptyFilterDesc')
+              : t('pages.outreach.emptyDesc')}
           </p>
           {(search || statusFilter !== 'All') ? (
             <button
               onClick={() => { setSearch(''); setStatusFilter('All'); }}
               className="mt-4 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-800"
             >
-              Clear filters
+              {t('pages.outreach.clearFilters')}
             </button>
           ) : (
             <button
@@ -1069,7 +1096,7 @@ export default function OutreachPage() {
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
-              New Sequence
+              {t('pages.outreach.createFirst')}
             </button>
           )}
         </div>
@@ -1090,11 +1117,11 @@ export default function OutreachPage() {
       {/* ── Footer count ── */}
       {filtered.length > 0 && (
         <p className="text-xs text-slate-400">
-          Showing{' '}
-          <span className="font-semibold text-slate-600">{filtered.length}</span>{' '}
-          of{' '}
-          <span className="font-semibold text-slate-600">{sequences.length}</span>{' '}
-          sequence{sequences.length !== 1 ? 's' : ''}
+          {(sequences.length === 1
+            ? t('pages.outreach.showingOf')
+            : t('pages.outreach.showingOfPlural'))
+            .replace('{visible}', String(filtered.length))
+            .replace('{total}', String(sequences.length))}
         </p>
       )}
 

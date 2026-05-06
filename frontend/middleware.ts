@@ -6,13 +6,16 @@ const PUBLIC_PATHS = ['/login', '/register'];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  const hasToken = request.cookies.has('hl_token');
+
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    // Authenticated users visiting /login or /register go straight to the dashboard.
+    if (hasToken) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
     return NextResponse.next();
   }
 
-  // The presence of the hl_token cookie (set by lib/auth.ts on login) signals
-  // an authenticated session. Client-side layouts do the full token check.
-  const hasToken = request.cookies.has('hl_token');
   if (!hasToken) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', pathname);

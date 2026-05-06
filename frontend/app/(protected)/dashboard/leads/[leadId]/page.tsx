@@ -8,6 +8,7 @@ import { ScoreRing, getScoreColor } from '@/components/ui/ScoreRing';
 import { Badge, classificationVariant, enrichmentVariant } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import type { OutreachMessage } from '@/types';
+import { useLocale } from '@/lib/i18n';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -84,6 +85,8 @@ function OutreachTimeline({
   onMarkSent: (id: string) => void;
   onDiscard: (id: string) => void;
 }) {
+  const { t } = useLocale();
+
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -92,10 +95,8 @@ function OutreachTimeline({
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <p className="text-sm font-semibold text-slate-600">No outreach yet</p>
-        <p className="mt-1 text-xs text-slate-400">
-          Click &ldquo;Generate Outreach&rdquo; above to create a personalised email.
-        </p>
+        <p className="text-sm font-semibold text-slate-600">{t('pages.leadDetail.noOutreach')}</p>
+        <p className="mt-1 text-xs text-slate-400">{t('pages.leadDetail.noOutreachDesc')}</p>
       </div>
     );
   }
@@ -156,7 +157,7 @@ function OutreachTimeline({
                 </p>
 
                 <p className="mt-2 text-[10px] font-medium text-slate-400">
-                  {isSent ? 'Sent' : 'Created'} · {displayDate}
+                  {isSent ? t('pages.leadDetail.sent') : t('pages.leadDetail.created')} · {displayDate}
                 </p>
 
                 {isDraft && (
@@ -168,13 +169,13 @@ function OutreachTimeline({
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
-                      Mark as Sent
+                      {t('pages.leadDetail.markAsSent')}
                     </button>
                     <button
                       onClick={() => onDiscard(msg.id)}
                       className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
                     >
-                      Discard
+                      {t('pages.leadDetail.discard')}
                     </button>
                   </div>
                 )}
@@ -189,52 +190,6 @@ function OutreachTimeline({
 
 // ── Qualification Card ─────────────────────────────────────────────────────────
 
-const QUAL_OPTIONS: {
-  id: QualStatus;
-  label: string;
-  description: string;
-  idleClass: string;
-  activeClass: string;
-  icon: React.ReactNode;
-}[] = [
-  {
-    id: 'qualified',
-    label: 'Qualified',
-    description: 'Strong ICP fit — move to pipeline',
-    idleClass: 'border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50',
-    activeClass: 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-100',
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'not_qualified',
-    label: 'Not Qualified',
-    description: 'Poor fit — remove from pipeline',
-    idleClass: 'border-slate-200 hover:border-red-300 hover:bg-red-50/50',
-    activeClass: 'border-red-500 bg-red-50 ring-2 ring-red-100',
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'nurturing',
-    label: 'Nurturing',
-    description: 'Not ready yet — keep warm',
-    idleClass: 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/50',
-    activeClass: 'border-amber-500 bg-amber-50 ring-2 ring-amber-100',
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-      </svg>
-    ),
-  },
-];
-
 const QUAL_COLORS: Record<QualStatus, string> = {
   qualified:     'text-emerald-700',
   not_qualified: 'text-red-600',
@@ -248,10 +203,51 @@ function QualificationCard({
   value: QualStatus | null;
   onChange: (s: QualStatus) => void;
 }) {
+  const { t } = useLocale();
+
+  const QUAL_OPTIONS = [
+    {
+      id: 'qualified' as QualStatus,
+      label: t('pages.leadDetail.qualOptionQualified'),
+      description: t('pages.leadDetail.qualOptionQualifiedDesc'),
+      idleClass: 'border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50',
+      activeClass: 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-100',
+      icon: (
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'not_qualified' as QualStatus,
+      label: t('pages.leadDetail.qualOptionNotQualified'),
+      description: t('pages.leadDetail.qualOptionNotQualifiedDesc'),
+      idleClass: 'border-slate-200 hover:border-red-300 hover:bg-red-50/50',
+      activeClass: 'border-red-500 bg-red-50 ring-2 ring-red-100',
+      icon: (
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'nurturing' as QualStatus,
+      label: t('pages.leadDetail.qualOptionNurturing'),
+      description: t('pages.leadDetail.qualOptionNurturingDesc'),
+      idleClass: 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/50',
+      activeClass: 'border-amber-500 bg-amber-50 ring-2 ring-amber-100',
+      icon: (
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <Card>
-      <h3 className="mb-1 text-sm font-semibold text-slate-900">Manual Qualification</h3>
-      <p className="mb-4 text-xs text-slate-500">Override the automated ICP classification.</p>
+      <h3 className="mb-1 text-sm font-semibold text-slate-900">{t('pages.leadDetail.manualQualTitle')}</h3>
+      <p className="mb-4 text-xs text-slate-500">{t('pages.leadDetail.manualQualDesc')}</p>
 
       <div className="space-y-2">
         {QUAL_OPTIONS.map((opt) => {
@@ -299,9 +295,9 @@ function QualificationCard({
 
       {value && (
         <p className={`mt-3 text-center text-xs font-medium ${QUAL_COLORS[value]}`}>
-          {value === 'qualified'     && '✓ Marked as Qualified'}
-          {value === 'not_qualified' && '✗ Marked as Not Qualified'}
-          {value === 'nurturing'     && '○ Added to Nurturing'}
+          {value === 'qualified'     && t('pages.leadDetail.markedAsQualified')}
+          {value === 'not_qualified' && t('pages.leadDetail.markedAsNotQualified')}
+          {value === 'nurturing'     && t('pages.leadDetail.addedToNurturing')}
         </p>
       )}
     </Card>
@@ -367,6 +363,7 @@ function IconGlobe() {
 
 export default function LeadDetailPage() {
   const { leadId } = useParams<{ leadId: string }>();
+  const { t } = useLocale();
 
   const lead = DUMMY_LEADS.find((l) => l.id === leadId);
 
@@ -402,7 +399,7 @@ export default function LeadDetailPage() {
       };
       setMessages((prev) => [newMsg, ...prev]);
       setGenerating(false);
-      showToast('Draft outreach message created');
+      showToast(t('pages.leadDetail.draftCreated'));
     }, 1200);
   }
 
@@ -410,20 +407,20 @@ export default function LeadDetailPage() {
     setMessages((prev) =>
       prev.map((m) => m.id === id ? { ...m, status: 'Sent', sentAt: new Date().toISOString() } : m)
     );
-    showToast('Message marked as sent');
+    showToast(t('pages.leadDetail.markedSent'));
   }
 
   function handleDiscard(id: string) {
     setMessages((prev) => prev.filter((m) => m.id !== id));
-    showToast('Draft discarded');
+    showToast(t('pages.leadDetail.draftDiscarded'));
   }
 
   function handleQualify(s: QualStatus) {
     setQualification(s);
     const labels: Record<QualStatus, string> = {
-      qualified:     'Lead marked as Qualified',
-      not_qualified: 'Lead marked as Not Qualified',
-      nurturing:     'Lead added to Nurturing',
+      qualified:     t('pages.leadDetail.qualifiedToast'),
+      not_qualified: t('pages.leadDetail.notQualifiedToast'),
+      nurturing:     t('pages.leadDetail.nurturingToast'),
     };
     showToast(labels[s]);
   }
@@ -438,10 +435,10 @@ export default function LeadDetailPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-5.477-3.765M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a4 4 0 015.477-3.765M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </div>
-        <h2 className="text-base font-semibold text-slate-700">Lead not found</h2>
-        <p className="mt-1 text-sm text-slate-500">This lead doesn&apos;t exist or may have been removed.</p>
+        <h2 className="text-base font-semibold text-slate-700">{t('pages.leadDetail.notFoundTitle')}</h2>
+        <p className="mt-1 text-sm text-slate-500">{t('pages.leadDetail.notFoundDesc')}</p>
         <Link href="/dashboard/leads" className="mt-5 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-800">
-          ← Back to Leads
+          {t('pages.leadDetail.backToLeadsLink')}
         </Link>
       </div>
     );
@@ -465,7 +462,7 @@ export default function LeadDetailPage() {
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Leads
+          {t('pages.leadDetail.backToLeads')}
         </Link>
       </nav>
 
@@ -529,9 +526,11 @@ export default function LeadDetailPage() {
             ) : (
               <div className="shrink-0 flex flex-col items-center justify-center gap-1">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-slate-200">
-                  <span className="text-xs font-medium text-slate-400">No score</span>
+                  <span className="text-xs font-medium text-slate-400">{t('pages.leadDetail.noScore')}</span>
                 </div>
-                <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Pending</span>
+                <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                  {t('pages.leadDetail.pending')}
+                </span>
               </div>
             )}
           </div>
@@ -540,14 +539,14 @@ export default function LeadDetailPage() {
           <div className="mt-5 grid grid-cols-1 gap-3 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">
             <ContactItem
               icon={<IconEmail />}
-              label="Email"
+              label={t('pages.leadDetail.contactEmail')}
               value={lead.email}
               href={`mailto:${lead.email}`}
             />
             {lead.phone && (
               <ContactItem
                 icon={<IconPhone />}
-                label="Phone"
+                label={t('pages.leadDetail.contactPhone')}
                 value={lead.phone}
                 href={`tel:${lead.phone}`}
               />
@@ -555,7 +554,7 @@ export default function LeadDetailPage() {
             {lead.whatsapp && (
               <ContactItem
                 icon={<IconWhatsApp />}
-                label="WhatsApp"
+                label={t('pages.leadDetail.contactWhatsApp')}
                 value={lead.whatsapp}
                 href={`https://wa.me/${lead.whatsapp.replace(/\D/g, '')}`}
               />
@@ -563,15 +562,15 @@ export default function LeadDetailPage() {
             {lead.linkedInUrl && (
               <ContactItem
                 icon={<IconLinkedIn />}
-                label="LinkedIn"
-                value="View Profile"
+                label={t('pages.leadDetail.contactLinkedIn')}
+                value={t('pages.leadDetail.viewProfile')}
                 href={lead.linkedInUrl}
               />
             )}
             {lead.companyWebsite && (
               <ContactItem
                 icon={<IconGlobe />}
-                label="Company Website"
+                label={t('pages.leadDetail.contactWebsite')}
                 value={lead.companyWebsite.replace(/^https?:\/\//, '')}
                 href={lead.companyWebsite}
               />
@@ -591,14 +590,14 @@ export default function LeadDetailPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Generating…
+                  {t('pages.leadDetail.generating')}
                 </>
               ) : (
                 <>
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  Generate Outreach
+                  {t('pages.leadDetail.generateOutreach')}
                 </>
               )}
             </button>
@@ -637,8 +636,8 @@ export default function LeadDetailPage() {
           <Card>
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">ICP Score Breakdown</h2>
-                <p className="mt-0.5 text-xs text-slate-500">How this lead matches your active ICP</p>
+                <h2 className="text-sm font-semibold text-slate-900">{t('pages.leadDetail.scoreBreakdownTitle')}</h2>
+                <p className="mt-0.5 text-xs text-slate-500">{t('pages.leadDetail.scoreBreakdownDesc')}</p>
               </div>
               {lead.icpScore !== null && (
                 <div className="text-right">
@@ -654,14 +653,14 @@ export default function LeadDetailPage() {
 
             {lead.scoreBreakdown ? (
               <div className="space-y-4">
-                <BreakdownBar label="Job Title Match"     value={lead.scoreBreakdown.jobTitleMatch}      max={30} />
-                <BreakdownBar label="Industry Match"      value={lead.scoreBreakdown.industryMatch}      max={25} />
-                <BreakdownBar label="Company Size Match"  value={lead.scoreBreakdown.companySizeMatch}   max={15} />
-                <BreakdownBar label="Pain Point Match"    value={lead.scoreBreakdown.painMatch}          max={20} />
-                <BreakdownBar label="Activity / Signals"  value={lead.scoreBreakdown.activitySignals}    max={10} />
+                <BreakdownBar label={t('pages.leadDetail.jobTitleMatch')}    value={lead.scoreBreakdown.jobTitleMatch}    max={30} />
+                <BreakdownBar label={t('pages.leadDetail.industryMatch')}    value={lead.scoreBreakdown.industryMatch}    max={25} />
+                <BreakdownBar label={t('pages.leadDetail.companySizeMatch')} value={lead.scoreBreakdown.companySizeMatch} max={15} />
+                <BreakdownBar label={t('pages.leadDetail.painMatch')}        value={lead.scoreBreakdown.painMatch}        max={20} />
+                <BreakdownBar label={t('pages.leadDetail.activitySignals')}  value={lead.scoreBreakdown.activitySignals}  max={10} />
 
                 <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-                  <span className="text-xs font-semibold text-slate-500">Total Score</span>
+                  <span className="text-xs font-semibold text-slate-500">{t('pages.leadDetail.totalScore')}</span>
                   <span className="text-base font-bold tabular-nums" style={{ color: scoreColor }}>
                     {lead.scoreBreakdown.total} / 100
                   </span>
@@ -670,9 +669,9 @@ export default function LeadDetailPage() {
                 {/* Score legend */}
                 <div className="grid grid-cols-3 gap-2 pt-1">
                   {[
-                    { label: 'High Fit',   range: '70–100', cls: 'bg-emerald-50 text-emerald-700' },
-                    { label: 'Medium Fit', range: '45–69',  cls: 'bg-amber-50 text-amber-700'   },
-                    { label: 'Low Fit',    range: '0–44',   cls: 'bg-red-50 text-red-600'        },
+                    { label: t('pages.leadDetail.legendHighFit'), range: '70–100', cls: 'bg-emerald-50 text-emerald-700' },
+                    { label: t('pages.leadDetail.legendMedFit'),  range: '45–69',  cls: 'bg-amber-50 text-amber-700'   },
+                    { label: t('pages.leadDetail.legendLowFit'),  range: '0–44',   cls: 'bg-red-50 text-red-600'        },
                   ].map((item) => (
                     <div key={item.label} className={`rounded-lg px-2.5 py-2 text-center ${item.cls}`}>
                       <p className="text-[11px] font-semibold">{item.label}</p>
@@ -688,10 +687,8 @@ export default function LeadDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <p className="text-sm font-semibold text-slate-600">Not yet scored</p>
-                <p className="mt-1 text-xs text-slate-400 max-w-xs">
-                  Scoring runs automatically once enrichment completes.
-                </p>
+                <p className="text-sm font-semibold text-slate-600">{t('pages.leadDetail.notYetScored')}</p>
+                <p className="mt-1 text-xs text-slate-400 max-w-xs">{t('pages.leadDetail.scoringPending')}</p>
               </div>
             )}
           </Card>
@@ -700,9 +697,11 @@ export default function LeadDetailPage() {
           <Card>
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">Outreach History</h2>
+                <h2 className="text-sm font-semibold text-slate-900">{t('pages.leadDetail.outreachHistoryTitle')}</h2>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  {messages.length} message{messages.length !== 1 ? 's' : ''} on record
+                  {messages.length === 1
+                    ? t('pages.leadDetail.messageOnRecord').replace('{count}', '1')
+                    : t('pages.leadDetail.messagesOnRecord').replace('{count}', String(messages.length))}
                 </p>
               </div>
               {messages.length > 0 && (
@@ -730,30 +729,38 @@ export default function LeadDetailPage() {
           {(lead.industry || lead.companySize || lead.revenueRange) && (
             <Card>
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Company
+                {t('pages.leadDetail.sectionCompany')}
               </h3>
               <div className="space-y-3">
                 {lead.industry && (
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Industry</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {t('pages.leadDetail.sectionIndustry')}
+                    </p>
                     <p className="mt-0.5 text-sm text-slate-800">{lead.industry}</p>
                   </div>
                 )}
                 {lead.companySize && (
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Company Size</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {t('pages.leadDetail.sectionCompanySize')}
+                    </p>
                     <p className="mt-0.5 text-sm text-slate-800">{lead.companySize}</p>
                   </div>
                 )}
                 {lead.revenueRange && (
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Revenue Range</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {t('pages.leadDetail.sectionRevenue')}
+                    </p>
                     <p className="mt-0.5 text-sm text-slate-800">{lead.revenueRange}</p>
                   </div>
                 )}
                 {lead.geography && (
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Location</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {t('pages.leadDetail.sectionLocation')}
+                    </p>
                     <p className="mt-0.5 text-sm text-slate-800">{lead.geography}</p>
                   </div>
                 )}
@@ -764,7 +771,9 @@ export default function LeadDetailPage() {
           {/* Notes */}
           {lead.notes && (
             <Card>
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Notes</h3>
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                {t('pages.leadDetail.sectionNotes')}
+              </h3>
               <div className="rounded-lg border border-amber-100 bg-amber-50 px-3.5 py-3">
                 <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">
                   {lead.notes}
@@ -776,19 +785,25 @@ export default function LeadDetailPage() {
           {/* Import meta */}
           <Card>
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Lead Info
+              {t('pages.leadDetail.sectionLeadInfo')}
             </h3>
             <div className="space-y-2.5">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Status</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {t('pages.leadDetail.statusLabel')}
+                </p>
                 <p className="mt-0.5 text-sm font-medium text-slate-700">{lead.status}</p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Source</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {t('pages.leadDetail.sourceLabel')}
+                </p>
                 <p className="mt-0.5 text-sm text-slate-700">{lead.source}</p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Imported</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {t('pages.leadDetail.importedLabel')}
+                </p>
                 <p className="mt-0.5 text-sm text-slate-700">
                   {new Date(lead.importedAt).toLocaleDateString('en-US', {
                     month: 'long', day: 'numeric', year: 'numeric',

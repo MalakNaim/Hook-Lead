@@ -5,6 +5,7 @@ import { DUMMY_ICP_PROFILES } from '@/lib/dummy-data';
 import type { ICPProfile } from '@/types';
 import { ICPProfileCard } from '@/components/icp/ICPProfileCard';
 import { ICPFormPanel, type PanelMode } from '@/components/icp/ICPFormPanel';
+import { useLocale } from '@/lib/i18n';
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
 
@@ -32,21 +33,22 @@ interface CheckItem {
   pass: boolean;
 }
 
-function qualityChecks(profile: ICPProfile): CheckItem[] {
+function qualityChecks(profile: ICPProfile, t: (key: string) => string): CheckItem[] {
   return [
-    { label: 'Industry defined',           pass: profile.industries.length > 0 },
-    { label: 'Job titles specified',        pass: profile.jobTitles.length > 0 },
-    { label: 'Company size range set',      pass: profile.companySizeMax > profile.companySizeMin },
-    { label: 'Target locations added',      pass: profile.locations.length > 0 },
-    { label: 'Pain points described',       pass: profile.painPoints.length > 0 },
-    { label: 'Budget range configured',     pass: profile.budgetMax > 0 && profile.budgetMax >= profile.budgetMin },
-    { label: 'Buying triggers identified',  pass: profile.buyingTriggers.length > 0 },
-    { label: 'Targeting depth',             pass: profile.industries.length >= 2 && profile.jobTitles.length >= 2 },
+    { label: t('pages.icp.checkIndustry'),       pass: profile.industries.length > 0 },
+    { label: t('pages.icp.checkJobTitles'),       pass: profile.jobTitles.length > 0 },
+    { label: t('pages.icp.checkCompanySize'),     pass: profile.companySizeMax > profile.companySizeMin },
+    { label: t('pages.icp.checkLocations'),       pass: profile.locations.length > 0 },
+    { label: t('pages.icp.checkPainPoints'),      pass: profile.painPoints.length > 0 },
+    { label: t('pages.icp.checkBudget'),          pass: profile.budgetMax > 0 && profile.budgetMax >= profile.budgetMin },
+    { label: t('pages.icp.checkBuyingTriggers'),  pass: profile.buyingTriggers.length > 0 },
+    { label: t('pages.icp.checkTargetDepth'),     pass: profile.industries.length >= 2 && profile.jobTitles.length >= 2 },
   ];
 }
 
 function ICPQualityChecklist({ profile }: { profile: ICPProfile }) {
-  const checks = qualityChecks(profile);
+  const { t } = useLocale();
+  const checks = qualityChecks(profile, t);
   const score = checks.filter((c) => c.pass).length;
   const total = checks.length;
   const pct = (score / total) * 100;
@@ -56,7 +58,13 @@ function ICPQualityChecklist({ profile }: { profile: ICPProfile }) {
   const scoreColor =
     score === total ? 'text-emerald-600' : score >= 6 ? 'text-amber-600' : 'text-red-500';
   const scoreLabel =
-    score === total ? 'Excellent' : score >= 6 ? 'Good' : score >= 4 ? 'Needs work' : 'Incomplete';
+    score === total
+      ? t('pages.icp.qualityExcellent')
+      : score >= 6
+      ? t('pages.icp.qualityGood')
+      : score >= 4
+      ? t('pages.icp.qualityNeedsWork')
+      : t('pages.icp.qualityIncomplete');
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
@@ -73,7 +81,7 @@ function ICPQualityChecklist({ profile }: { profile: ICPProfile }) {
             </svg>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">Profile Quality</h3>
+            <h3 className="text-sm font-semibold text-slate-800">{t('pages.icp.qualityTitle')}</h3>
             <p className="text-xs text-slate-400 truncate max-w-[160px]">&ldquo;{profile.name}&rdquo;</p>
           </div>
         </div>
@@ -120,18 +128,20 @@ function ICPQualityChecklist({ profile }: { profile: ICPProfile }) {
 
 // ── Empty State ────────────────────────────────────────────────────────────────
 
-const CHECKLIST_PREVIEW = [
-  'Industry defined',
-  'Job titles specified',
-  'Company size range',
-  'Target locations',
-  'Pain points described',
-  'Budget range configured',
-  'Buying triggers',
-  'Targeting depth',
-];
-
 function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
+  const { t } = useLocale();
+
+  const checklistPreview = [
+    t('pages.icp.checkIndustry'),
+    t('pages.icp.checkJobTitles'),
+    t('pages.icp.checkCompanySize'),
+    t('pages.icp.checkLocations'),
+    t('pages.icp.checkPainPoints'),
+    t('pages.icp.checkBudget'),
+    t('pages.icp.checkBuyingTriggers'),
+    t('pages.icp.checkTargetDepth'),
+  ];
+
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-white py-16 text-center">
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50">
@@ -147,11 +157,8 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
           <path strokeLinecap="round" d="M12 3v2M12 19v2M3 12h2M19 12h2" />
         </svg>
       </div>
-      <h3 className="text-sm font-semibold text-slate-700">No ICP profiles yet</h3>
-      <p className="mt-1 max-w-xs text-sm text-slate-500">
-        Create your first ideal customer profile to start scoring and filtering leads
-        automatically.
-      </p>
+      <h3 className="text-sm font-semibold text-slate-700">{t('pages.icp.emptyTitle')}</h3>
+      <p className="mt-1 max-w-xs text-sm text-slate-500">{t('pages.icp.emptyDesc')}</p>
       <button
         onClick={onCreateClick}
         className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -159,16 +166,16 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
         </svg>
-        Create First Profile
+        {t('pages.icp.createFirstProfile')}
       </button>
 
       {/* Checklist preview */}
       <div className="mt-8 w-full max-w-sm px-4">
         <p className="mb-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          A complete ICP profile includes
+          {t('pages.icp.completeProfileIncludes')}
         </p>
         <div className="grid grid-cols-2 gap-1.5 text-left">
-          {CHECKLIST_PREVIEW.map((label) => (
+          {checklistPreview.map((label) => (
             <div key={label} className="flex items-center gap-2">
               <svg
                 className="w-3.5 h-3.5 shrink-0 text-slate-300"
@@ -195,6 +202,7 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function ICPPage() {
+  const { t } = useLocale();
   const [profiles, setProfiles] = useState<ICPProfile[]>(DUMMY_ICP_PROFILES);
   const [activeId, setActiveId] = useState<string>('icp-1');
   const [panelOpen, setPanelOpen] = useState(false);
@@ -238,7 +246,8 @@ export default function ICPPage() {
       isNew ? [...prev, saved] : prev.map((p) => (p.id === saved.id ? saved : p))
     );
     closePanel();
-    showToast(`"${saved.name}" ${isNew ? 'created' : 'updated'} successfully`);
+    const toastKey = isNew ? 'pages.icp.toastCreated' : 'pages.icp.toastUpdated';
+    showToast(t(toastKey).replace('{name}', saved.name));
   }
 
   function handleDelete(id: string) {
@@ -247,7 +256,7 @@ export default function ICPPage() {
       const remaining = profiles.filter((p) => p.id !== id);
       setActiveId(remaining[0]?.id ?? '');
     }
-    showToast('Profile deleted');
+    showToast(t('pages.icp.toastDeleted'));
   }
 
   function handleDuplicate(profile: ICPProfile) {
@@ -258,14 +267,19 @@ export default function ICPPage() {
       updatedAt: new Date().toISOString(),
     };
     setProfiles((prev) => [...prev, copy]);
-    showToast(`"${copy.name}" created as a duplicate`);
+    showToast(t('pages.icp.toastDuplicate').replace('{name}', copy.name));
   }
 
   function handleSetActive(id: string) {
     setActiveId(id);
     const name = profiles.find((p) => p.id === id)?.name;
-    if (name) showToast(`"${name}" set as active profile`);
+    if (name) showToast(t('pages.icp.toastSetActive').replace('{name}', name));
   }
+
+  const profileCountText =
+    profiles.length === 1
+      ? t('pages.icp.profileCount').replace('{count}', '1')
+      : t('pages.icp.profilesCount').replace('{count}', String(profiles.length));
 
   return (
     <>
@@ -273,10 +287,9 @@ export default function ICPPage() {
         {/* ── Page header ── */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">ICP Management</h1>
+            <h1 className="text-xl font-bold text-slate-900">{t('pages.icp.managementTitle')}</h1>
             <p className="mt-0.5 text-sm text-slate-500 max-w-xl">
-              Define your Ideal Customer Profiles to power lead scoring and outreach
-              personalisation. The active profile is applied to every lead automatically.
+              {t('pages.icp.managementDesc')}
             </p>
           </div>
           <button
@@ -286,7 +299,7 @@ export default function ICPPage() {
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            New Profile
+            {t('pages.icp.newProfile')}
           </button>
         </div>
 
@@ -306,23 +319,23 @@ export default function ICPPage() {
                       />
                     </svg>
                     <p className="flex-1 text-sm text-slate-600">
-                      Active profile:{' '}
+                      {t('pages.icp.activeProfileLabel')}{' '}
                       <span className="font-semibold text-indigo-700">{activeProfile.name}</span>
-                      {' '}— all leads are scored against this ICP.
+                      {' '}{t('pages.icp.allLeadsScoredAgainst')}
                     </p>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => openView(activeProfile)}
                         className="text-xs font-medium text-indigo-500 transition-colors hover:text-indigo-700"
                       >
-                        View
+                        {t('pages.icp.viewBtn')}
                       </button>
                       <span className="text-indigo-200">|</span>
                       <button
                         onClick={() => openEdit(activeProfile)}
                         className="text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-800"
                       >
-                        Edit →
+                        {t('pages.icp.editBtn')}
                       </button>
                     </div>
                   </div>
@@ -331,7 +344,7 @@ export default function ICPPage() {
                     <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    No active ICP profile. Open any profile card and click &ldquo;Set as Active&rdquo; to enable lead scoring.
+                    {t('pages.icp.noActiveProfile')}
                   </div>
                 )}
 
@@ -344,8 +357,8 @@ export default function ICPPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
                       ),
-                      label: 'Lead Scoring',
-                      sub: 'Powers ICP fit scores',
+                      label: t('pages.icp.leadScoringLabel'),
+                      sub: t('pages.icp.leadScoringDesc'),
                     },
                     {
                       icon: (
@@ -353,8 +366,8 @@ export default function ICPPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
                         </svg>
                       ),
-                      label: 'Lead Filtering',
-                      sub: 'Filter by ICP match',
+                      label: t('pages.icp.leadFilteringLabel'),
+                      sub: t('pages.icp.leadFilteringDesc'),
                     },
                     {
                       icon: (
@@ -362,8 +375,8 @@ export default function ICPPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       ),
-                      label: 'Outreach',
-                      sub: 'Personalises emails',
+                      label: t('pages.icp.outreachLabel'),
+                      sub: t('pages.icp.outreachDesc'),
                     },
                   ].map((item) => (
                     <div
@@ -396,7 +409,7 @@ export default function ICPPage() {
                       />
                     </svg>
                     <p className="text-xs text-slate-400">
-                      Set an active profile to see its quality score
+                      {t('pages.icp.setActiveQualityHint')}
                     </p>
                   </div>
                 )}
@@ -405,7 +418,7 @@ export default function ICPPage() {
 
             {/* ── Profile count ── */}
             <p className="text-xs text-slate-400">
-              {profiles.length} profile{profiles.length !== 1 ? 's' : ''} — click a card to view or edit
+              {profileCountText} — {t('pages.icp.clickToViewEdit')}
             </p>
 
             {/* ── Profile grid ── */}

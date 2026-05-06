@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { TagInput } from '@/components/ui/TagInput';
 import { Toggle } from '@/components/ui/Toggle';
 import { Button } from '@/components/ui/Button';
+import { useLocale } from '@/lib/i18n';
 
 // ── Suggestions ────────────────────────────────────────────────────────────────
 
@@ -96,8 +97,10 @@ function TagPills({
   tags: string[];
   colorClass?: string;
 }) {
+  const { t } = useLocale();
+
   if (tags.length === 0) {
-    return <p className="text-xs text-slate-400 italic">None specified</p>;
+    return <p className="text-xs text-slate-400 italic">{t('pages.icpPanel.noneSpecified')}</p>;
   }
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -123,6 +126,8 @@ function ViewSection({ title, children }: { title: string; children: React.React
 }
 
 function ViewBody({ profile }: { profile: ICPProfile }) {
+  const { t } = useLocale();
+
   const updatedDate = new Date(profile.updatedAt).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -135,51 +140,53 @@ function ViewBody({ profile }: { profile: ICPProfile }) {
         {/* Profile name banner */}
         <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-4">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-indigo-400 mb-0.5">
-            Profile Name
+            {t('pages.icpPanel.profileName')}
           </p>
           <p className="text-base font-semibold text-slate-900">{profile.name}</p>
-          <p className="mt-0.5 text-xs text-slate-400">Last updated {updatedDate}</p>
+          <p className="mt-0.5 text-xs text-slate-400">
+            {t('pages.icpPanel.lastUpdated').replace('{date}', updatedDate)}
+          </p>
         </div>
 
         {/* Target Market */}
-        <ViewSection title="Target Market">
+        <ViewSection title={t('pages.icpPanel.sectionTargetMarket')}>
           <div>
-            <ViewLabel>Industries</ViewLabel>
+            <ViewLabel>{t('pages.icpPanel.labelIndustries')}</ViewLabel>
             <TagPills tags={profile.industries} colorClass="bg-indigo-50 text-indigo-700" />
           </div>
           <div>
-            <ViewLabel>Job Titles</ViewLabel>
+            <ViewLabel>{t('pages.icpPanel.labelJobTitles')}</ViewLabel>
             <TagPills tags={profile.jobTitles} colorClass="bg-slate-100 text-slate-600" />
           </div>
         </ViewSection>
 
         {/* Company Criteria */}
-        <ViewSection title="Company Criteria">
+        <ViewSection title={t('pages.icpPanel.sectionCompanyCriteria')}>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <ViewLabel>Company Size</ViewLabel>
+              <ViewLabel>{t('pages.icpPanel.labelCompanySize')}</ViewLabel>
               <p className="text-sm font-semibold text-slate-800">
                 {profile.companySizeMin.toLocaleString()}–{profile.companySizeMax.toLocaleString()}
-                <span className="text-slate-400 font-normal"> emp.</span>
+                <span className="text-slate-400 font-normal"> {t('pages.icpPanel.emp')}</span>
               </p>
             </div>
             <div>
-              <ViewLabel>Budget / mo</ViewLabel>
+              <ViewLabel>{t('pages.icpPanel.labelBudgetPerMonth')}</ViewLabel>
               <p className="text-sm font-semibold text-slate-800">
                 ${profile.budgetMin.toLocaleString()}–${profile.budgetMax.toLocaleString()}
               </p>
             </div>
           </div>
           <div>
-            <ViewLabel>Locations</ViewLabel>
+            <ViewLabel>{t('pages.icpPanel.labelLocations')}</ViewLabel>
             <TagPills tags={profile.locations} colorClass="bg-slate-100 text-slate-600" />
           </div>
         </ViewSection>
 
         {/* Qualification */}
-        <ViewSection title="Qualification">
+        <ViewSection title={t('pages.icpPanel.sectionQualification')}>
           <div>
-            <ViewLabel>Decision Maker Required</ViewLabel>
+            <ViewLabel>{t('pages.icpPanel.labelDecisionMaker')}</ViewLabel>
             <span
               className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                 profile.decisionMaker
@@ -200,19 +207,21 @@ function ViewBody({ profile }: { profile: ICPProfile }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}
-              {profile.decisionMaker ? 'Yes — required' : 'No — any seniority'}
+              {profile.decisionMaker
+                ? t('pages.icpPanel.dmRequired')
+                : t('pages.icpPanel.dmNotRequired')}
             </span>
           </div>
           <div>
-            <ViewLabel>Pain Points</ViewLabel>
+            <ViewLabel>{t('pages.icpPanel.labelPainPoints')}</ViewLabel>
             <TagPills tags={profile.painPoints} colorClass="bg-rose-50 text-rose-700" />
           </div>
         </ViewSection>
 
         {/* Intent */}
-        <ViewSection title="Buying Intent">
+        <ViewSection title={t('pages.icpPanel.sectionBuyingIntent')}>
           <div>
-            <ViewLabel>Buying Triggers</ViewLabel>
+            <ViewLabel>{t('pages.icpPanel.labelBuyingTriggers')}</ViewLabel>
             <TagPills tags={profile.buyingTriggers} colorClass="bg-amber-50 text-amber-700" />
           </div>
         </ViewSection>
@@ -242,6 +251,7 @@ export function ICPFormPanel({
   onSave,
   onEditRequest,
 }: ICPFormPanelProps) {
+  const { t } = useLocale();
   const effectiveMode: PanelMode = mode ?? (profile !== null ? 'edit' : 'create');
   const isView = effectiveMode === 'view';
   const isEdit = effectiveMode === 'edit';
@@ -258,13 +268,13 @@ export function ICPFormPanel({
 
   function validate(): boolean {
     const e: Partial<Record<string, string>> = {};
-    if (!form.name.trim()) e.name = 'Profile name is required';
-    if (form.industries.length === 0) e.industries = 'Add at least one industry';
-    if (form.jobTitles.length === 0) e.jobTitles = 'Add at least one job title';
-    if (form.companySizeMin < 1) e.companySizeMin = 'Must be ≥ 1';
+    if (!form.name.trim()) e.name = t('pages.icpPanel.errorNameRequired');
+    if (form.industries.length === 0) e.industries = t('pages.icpPanel.errorIndustriesRequired');
+    if (form.jobTitles.length === 0) e.jobTitles = t('pages.icpPanel.errorJobTitlesRequired');
+    if (form.companySizeMin < 1) e.companySizeMin = t('pages.icpPanel.errorMinEmployees');
     if (form.companySizeMax <= form.companySizeMin)
-      e.companySizeMax = 'Must be greater than minimum';
-    if (form.budgetMax < form.budgetMin) e.budgetMax = 'Must be ≥ minimum budget';
+      e.companySizeMax = t('pages.icpPanel.errorMaxEmployees');
+    if (form.budgetMax < form.budgetMin) e.budgetMax = t('pages.icpPanel.errorBudgetMax');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -285,17 +295,17 @@ export function ICPFormPanel({
 
   const headerTitle =
     effectiveMode === 'view'
-      ? 'View ICP Profile'
+      ? t('pages.icpPanel.viewTitle')
       : effectiveMode === 'edit'
-      ? 'Edit ICP Profile'
-      : 'New ICP Profile';
+      ? t('pages.icpPanel.editTitle')
+      : t('pages.icpPanel.newTitle');
 
   const headerSub =
     effectiveMode === 'view'
-      ? `Viewing "${profile?.name ?? ''}"`
+      ? t('pages.icpPanel.viewingSub').replace('{name}', profile?.name ?? '')
       : effectiveMode === 'edit'
-      ? `Editing "${profile!.name}"`
-      : 'Define a new ideal customer profile';
+      ? t('pages.icpPanel.editingSub').replace('{name}', profile!.name)
+      : t('pages.icpPanel.newSub');
 
   return (
     <>
@@ -324,7 +334,7 @@ export function ICPFormPanel({
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Close panel"
+            aria-label={t('pages.icpPanel.closePanel')}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -341,43 +351,43 @@ export function ICPFormPanel({
 
               {/* ── 1. Profile Info ── */}
               <section className="space-y-4">
-                <SectionDivider num="1" title="Profile Info" />
+                <SectionDivider num="1" title={t('pages.icpPanel.sectionProfileInfo')} />
                 <Input
-                  label="Profile Name"
+                  label={t('pages.icpPanel.inputProfileName')}
                   value={form.name}
                   onChange={(e) => set('name', e.target.value)}
-                  placeholder="e.g. Primary ICP, Enterprise, SMB Growth"
+                  placeholder={t('pages.icpPanel.inputProfileNamePlaceholder')}
                   error={errors.name}
                 />
               </section>
 
               {/* ── 2. Target Market ── */}
               <section className="space-y-4">
-                <SectionDivider num="2" title="Target Market" />
+                <SectionDivider num="2" title={t('pages.icpPanel.sectionTargetMarket')} />
                 <TagInput
-                  label="Industries"
+                  label={t('pages.icpPanel.inputIndustries')}
                   tags={form.industries}
                   onChange={(tags) => set('industries', tags)}
                   suggestions={INDUSTRY_SUGGESTIONS}
-                  hint="Type or pick from suggestions — press Enter to add"
+                  hint={t('pages.icpPanel.inputIndustriesHint')}
                   error={errors.industries}
                 />
                 <TagInput
-                  label="Job Titles"
+                  label={t('pages.icpPanel.inputJobTitles')}
                   tags={form.jobTitles}
                   onChange={(tags) => set('jobTitles', tags)}
                   suggestions={JOB_TITLE_SUGGESTIONS}
-                  hint="Add target decision-maker titles"
+                  hint={t('pages.icpPanel.inputJobTitlesHint')}
                   error={errors.jobTitles}
                 />
               </section>
 
               {/* ── 3. Company Criteria ── */}
               <section className="space-y-4">
-                <SectionDivider num="3" title="Company Criteria" />
+                <SectionDivider num="3" title={t('pages.icpPanel.sectionCompanyCriteria')} />
                 <div className="grid grid-cols-2 gap-3">
                   <Input
-                    label="Min Employees"
+                    label={t('pages.icpPanel.inputMinEmployees')}
                     type="number"
                     min={1}
                     value={form.companySizeMin}
@@ -386,7 +396,7 @@ export function ICPFormPanel({
                     error={errors.companySizeMin}
                   />
                   <Input
-                    label="Max Employees"
+                    label={t('pages.icpPanel.inputMaxEmployees')}
                     type="number"
                     min={1}
                     value={form.companySizeMax}
@@ -396,46 +406,46 @@ export function ICPFormPanel({
                   />
                 </div>
                 <TagInput
-                  label="Locations"
+                  label={t('pages.icpPanel.inputLocations')}
                   tags={form.locations}
                   onChange={(tags) => set('locations', tags)}
                   suggestions={LOCATION_SUGGESTIONS}
-                  hint="Target regions or countries"
+                  hint={t('pages.icpPanel.inputLocationsHint')}
                 />
               </section>
 
               {/* ── 4. Qualification ── */}
               <section className="space-y-4">
-                <SectionDivider num="4" title="Qualification" />
+                <SectionDivider num="4" title={t('pages.icpPanel.sectionQualification')} />
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <p className="mb-2.5 text-sm font-medium text-slate-700">
-                    Decision Maker Required
+                    {t('pages.icpPanel.inputDecisionMaker')}
                   </p>
                   <Toggle
                     checked={form.decisionMaker}
                     onChange={(val) => set('decisionMaker', val)}
                     description={
                       form.decisionMaker
-                        ? 'Only C-level / VP / Director titles will qualify'
-                        : 'All seniority levels accepted'
+                        ? t('pages.icpPanel.inputDmOnDesc')
+                        : t('pages.icpPanel.inputDmOffDesc')
                     }
                   />
                 </div>
                 <TagInput
-                  label="Pain Points"
+                  label={t('pages.icpPanel.inputPainPoints')}
                   tags={form.painPoints}
                   onChange={(tags) => set('painPoints', tags)}
                   suggestions={PAIN_POINT_SUGGESTIONS}
-                  hint="Problems your product directly solves"
+                  hint={t('pages.icpPanel.inputPainPointsHint')}
                 />
               </section>
 
               {/* ── 5. Budget & Intent ── */}
               <section className="space-y-4">
-                <SectionDivider num="5" title="Budget & Intent" />
+                <SectionDivider num="5" title={t('pages.icpPanel.sectionBudgetIntent')} />
                 <div className="grid grid-cols-2 gap-3">
                   <Input
-                    label="Min Budget ($/mo)"
+                    label={t('pages.icpPanel.inputMinBudget')}
                     type="number"
                     min={0}
                     value={form.budgetMin}
@@ -444,7 +454,7 @@ export function ICPFormPanel({
                     suffix="$"
                   />
                   <Input
-                    label="Max Budget ($/mo)"
+                    label={t('pages.icpPanel.inputMaxBudget')}
                     type="number"
                     min={0}
                     value={form.budgetMax}
@@ -455,11 +465,11 @@ export function ICPFormPanel({
                   />
                 </div>
                 <TagInput
-                  label="Buying Triggers"
+                  label={t('pages.icpPanel.inputBuyingTriggers')}
                   tags={form.buyingTriggers}
                   onChange={(tags) => set('buyingTriggers', tags)}
                   suggestions={TRIGGER_SUGGESTIONS}
-                  hint="Events that signal purchase intent"
+                  hint={t('pages.icpPanel.inputBuyingTriggersHint')}
                 />
               </section>
 
@@ -475,7 +485,7 @@ export function ICPFormPanel({
                 onClick={onClose}
                 className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
               >
-                Close
+                {t('common.close')}
               </button>
               {onEditRequest && (
                 <button
@@ -489,7 +499,7 @@ export function ICPFormPanel({
                       d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                     />
                   </svg>
-                  Edit Profile
+                  {t('pages.icpPanel.editBtn')}
                 </button>
               )}
             </div>
@@ -499,14 +509,18 @@ export function ICPFormPanel({
                 onClick={onClose}
                 className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <div className="flex items-center gap-3">
                 {Object.keys(errors).length > 0 && (
-                  <p className="text-xs text-red-500">Please fix the errors above</p>
+                  <p className="text-xs text-red-500">{t('pages.icpPanel.errorFixAbove')}</p>
                 )}
                 <Button onClick={handleSave} loading={saving} size="md">
-                  {saving ? 'Saving…' : isEdit ? 'Update Profile' : 'Create Profile'}
+                  {saving
+                    ? t('pages.icpPanel.saving')
+                    : isEdit
+                    ? t('pages.icpPanel.updateBtn')
+                    : t('pages.icpPanel.createBtn')}
                 </Button>
               </div>
             </div>

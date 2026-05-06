@@ -48,7 +48,7 @@ function Spinner() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/leads";
+  const next = searchParams.get("next") ?? "/dashboard";
   const { t } = useLocale();
 
   const [email, setEmail] = useState("");
