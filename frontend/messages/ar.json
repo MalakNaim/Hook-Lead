@@ -488,7 +488,21 @@
       "notQualifiedToast": "تم تحديد العميل كغير مؤهل",
       "nurturingToast": "تمت إضافة العميل إلى الرعاية",
       "loading": "جارِ تحميل العميل…",
-      "errorFallback": "تعذّر الاتصال بالخادم — عرض البيانات التجريبية"
+      "errorFallback": "تعذّر الاتصال بالخادم — عرض البيانات التجريبية",
+      "statusCardTitle": "حالة العميل",
+      "statusCardDesc": "تحديث حالة خط المبيعات لهذا العميل.",
+      "statusNew": "جديد",
+      "statusQualified": "مؤهل",
+      "statusDisqualified": "غير مؤهل",
+      "statusUnsubscribed": "إلغاء الاشتراك",
+      "statusSaving": "جارِ حفظ الحالة…",
+      "statusUpdatedToast": "تم تحديث الحالة",
+      "statusUpdateError": "فشل تحديث الحالة. قد لا تملك الصلاحية.",
+      "addNotePlaceholder": "اكتب ملاحظة حول هذا العميل…",
+      "addNoteButton": "إضافة ملاحظة",
+      "addingNote": "جارِ الإضافة…",
+      "noteAddedToast": "تمت إضافة الملاحظة",
+      "noteAddError": "فشل إضافة الملاحظة. يرجى المحاولة مرة أخرى."
     },
     "scoring": {
       "title": "تقييم العملاء",

@@ -1,19 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { DUMMY_LEADS, DUMMY_OUTREACH } from '@/lib/dummy-data';
-import { getLeadById } from '@/services/leadsService';
+import { getLeadById, updateLeadStatus, addLeadNote } from '@/services/leadsService';
 import { ScoreRing, getScoreColor } from '@/components/ui/ScoreRing';
 import { Badge, classificationVariant, enrichmentVariant, statusVariant } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import type { Lead, OutreachMessage } from '@/types';
+import type { Lead, LeadStatus, OutreachMessage } from '@/types';
 import { useLocale } from '@/lib/i18n';
-
-// ── Types ──────────────────────────────────────────────────────────────────────
-
-type QualStatus = 'qualified' | 'not_qualified' | 'nurturing';
 
 // ── Score Breakdown Bar ────────────────────────────────────────────────────────
 
@@ -181,93 +177,81 @@ function OutreachTimeline({
   );
 }
 
-// ── Qualification Card ─────────────────────────────────────────────────────────
+// ── Status Card ────────────────────────────────────────────────────────────────
 
-const QUAL_COLORS: Record<QualStatus, string> = {
-  qualified:     'text-emerald-700',
-  not_qualified: 'text-red-600',
-  nurturing:     'text-amber-700',
-};
+const STATUS_OPTIONS: {
+  id: 'New' | 'Qualified' | 'Disqualified' | 'Unsubscribed';
+  idleClass: string;
+  activeClass: string;
+  dotClass: string;
+  labelKey: string;
+}[] = [
+  {
+    id: 'New',
+    idleClass: 'border-slate-200 hover:border-blue-300 hover:bg-blue-50/50',
+    activeClass: 'border-blue-500 bg-blue-50 ring-2 ring-blue-100',
+    dotClass: 'bg-blue-500',
+    labelKey: 'statusNew',
+  },
+  {
+    id: 'Qualified',
+    idleClass: 'border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50',
+    activeClass: 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-100',
+    dotClass: 'bg-emerald-500',
+    labelKey: 'statusQualified',
+  },
+  {
+    id: 'Disqualified',
+    idleClass: 'border-slate-200 hover:border-red-300 hover:bg-red-50/50',
+    activeClass: 'border-red-500 bg-red-50 ring-2 ring-red-100',
+    dotClass: 'bg-red-500',
+    labelKey: 'statusDisqualified',
+  },
+  {
+    id: 'Unsubscribed',
+    idleClass: 'border-slate-200 hover:border-slate-400 hover:bg-slate-50',
+    activeClass: 'border-slate-500 bg-slate-50 ring-2 ring-slate-200',
+    dotClass: 'bg-slate-400',
+    labelKey: 'statusUnsubscribed',
+  },
+];
 
-function QualificationCard({
-  value,
-  onChange,
+function StatusCard({
+  currentStatus,
+  onStatusChange,
+  saving,
+  error,
 }: {
-  value: QualStatus | null;
-  onChange: (s: QualStatus) => void;
+  currentStatus: LeadStatus;
+  onStatusChange: (s: 'New' | 'Qualified' | 'Disqualified' | 'Unsubscribed') => void;
+  saving: boolean;
+  error: string | null;
 }) {
   const { t } = useLocale();
 
-  const QUAL_OPTIONS = [
-    {
-      id: 'qualified' as QualStatus,
-      label: t('pages.leadDetail.qualOptionQualified'),
-      description: t('pages.leadDetail.qualOptionQualifiedDesc'),
-      idleClass: 'border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50',
-      activeClass: 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-100',
-      icon: (
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    {
-      id: 'not_qualified' as QualStatus,
-      label: t('pages.leadDetail.qualOptionNotQualified'),
-      description: t('pages.leadDetail.qualOptionNotQualifiedDesc'),
-      idleClass: 'border-slate-200 hover:border-red-300 hover:bg-red-50/50',
-      activeClass: 'border-red-500 bg-red-50 ring-2 ring-red-100',
-      icon: (
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    {
-      id: 'nurturing' as QualStatus,
-      label: t('pages.leadDetail.qualOptionNurturing'),
-      description: t('pages.leadDetail.qualOptionNurturingDesc'),
-      idleClass: 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/50',
-      activeClass: 'border-amber-500 bg-amber-50 ring-2 ring-amber-100',
-      icon: (
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-        </svg>
-      ),
-    },
-  ];
-
   return (
     <Card>
-      <h3 className="mb-1 text-sm font-semibold text-slate-900">{t('pages.leadDetail.manualQualTitle')}</h3>
-      <p className="mb-4 text-xs text-slate-500">{t('pages.leadDetail.manualQualDesc')}</p>
+      <h3 className="mb-1 text-sm font-semibold text-slate-900">{t('pages.leadDetail.statusCardTitle')}</h3>
+      <p className="mb-4 text-xs text-slate-500">{t('pages.leadDetail.statusCardDesc')}</p>
       <div className="space-y-2">
-        {QUAL_OPTIONS.map((opt) => {
-          const isActive = value === opt.id;
+        {STATUS_OPTIONS.map((opt) => {
+          const isActive = currentStatus === opt.id;
           return (
             <button
               key={opt.id}
-              onClick={() => onChange(opt.id)}
-              className={`group w-full rounded-xl border p-3 text-left transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+              onClick={() => !saving && onStatusChange(opt.id)}
+              disabled={saving}
+              className={`w-full rounded-xl border p-3 text-left transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 ${
                 isActive ? opt.activeClass : opt.idleClass
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <span
-                  className={`shrink-0 transition-colors ${
-                    isActive ? QUAL_COLORS[opt.id] : 'text-slate-400 group-hover:text-slate-600'
-                  }`}
-                >
-                  {opt.icon}
-                </span>
-                <div className="min-w-0">
-                  <p className={`text-xs font-semibold ${isActive ? QUAL_COLORS[opt.id] : 'text-slate-700'}`}>
-                    {opt.label}
-                  </p>
-                  <p className="text-[11px] text-slate-400">{opt.description}</p>
-                </div>
+                <span className={`h-2 w-2 shrink-0 rounded-full ${opt.dotClass}`} />
+                <p className={`flex-1 text-xs font-semibold ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>
+                  {t(`pages.leadDetail.${opt.labelKey}`)}
+                </p>
                 {isActive && (
-                  <svg className={`ml-auto h-3.5 w-3.5 shrink-0 ${QUAL_COLORS[opt.id]}`} fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="h-3.5 w-3.5 shrink-0 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 )}
@@ -276,13 +260,67 @@ function QualificationCard({
           );
         })}
       </div>
-      {value && (
-        <p className={`mt-3 text-center text-xs font-medium ${QUAL_COLORS[value]}`}>
-          {value === 'qualified'     && t('pages.leadDetail.markedAsQualified')}
-          {value === 'not_qualified' && t('pages.leadDetail.markedAsNotQualified')}
-          {value === 'nurturing'     && t('pages.leadDetail.addedToNurturing')}
+      {saving && (
+        <p className="mt-3 text-center text-xs text-slate-500">{t('pages.leadDetail.statusSaving')}</p>
+      )}
+      {error && (
+        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
+          {error}
         </p>
       )}
+    </Card>
+  );
+}
+
+// ── Notes Card ─────────────────────────────────────────────────────────────────
+
+function NotesCard({
+  notes,
+  noteText,
+  onNoteChange,
+  onAddNote,
+  saving,
+  error,
+}: {
+  notes: string | null;
+  noteText: string;
+  onNoteChange: (v: string) => void;
+  onAddNote: () => void;
+  saving: boolean;
+  error: string | null;
+}) {
+  const { t } = useLocale();
+
+  return (
+    <Card>
+      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+        {t('pages.leadDetail.sectionNotes')}
+      </h3>
+      {notes && (
+        <div className="mb-4 rounded-lg border border-amber-100 bg-amber-50 px-3.5 py-3">
+          <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">{notes}</p>
+        </div>
+      )}
+      <div className="space-y-2">
+        <textarea
+          value={noteText}
+          onChange={(e) => onNoteChange(e.target.value)}
+          placeholder={t('pages.leadDetail.addNotePlaceholder')}
+          rows={3}
+          disabled={saving}
+          className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-60"
+        />
+        <button
+          onClick={onAddNote}
+          disabled={saving || !noteText.trim()}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+        >
+          {saving ? t('pages.leadDetail.addingNote') : t('pages.leadDetail.addNoteButton')}
+        </button>
+        {error && (
+          <p className="text-xs font-medium text-red-600">{error}</p>
+        )}
+      </div>
     </Card>
   );
 }
@@ -392,35 +430,49 @@ export default function LeadDetailPage() {
 
   const [messages, setMessages]     = useState<OutreachMessage[]>([]);
   const [generating, setGenerating] = useState(false);
-  const [qualification, setQualification] = useState<QualStatus | null>(null);
   const [toast, setToast]           = useState<string | null>(null);
 
+  // Status update state
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [statusError, setStatusError]   = useState<string | null>(null);
+
+  // Note state
+  const [noteText, setNoteText]     = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteError, setNoteError]   = useState<string | null>(null);
+
   // ── Fetch lead ─────────────────────────────────────────────────────────────
+
+  const fetchLead = useCallback(async () => {
+    try {
+      const data = await getLeadById(leadId);
+      setLead(data);
+      setIsFallback(false);
+      setMessages(DUMMY_OUTREACH.filter((o) => o.leadId === leadId));
+    } catch {
+      const dummy = DUMMY_LEADS.find((l) => l.id === leadId) as Lead | undefined;
+      setLead(dummy ?? null);
+      setMessages(DUMMY_OUTREACH.filter((o) => o.leadId === leadId));
+      setIsFallback(true);
+    }
+  }, [leadId]);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setIsFallback(false);
 
     getLeadById(leadId)
       .then((data) => {
         if (cancelled) return;
         setLead(data);
+        setIsFallback(false);
         setMessages(DUMMY_OUTREACH.filter((o) => o.leadId === leadId));
-        if (data.status === 'Qualified')    setQualification('qualified');
-        else if (data.status === 'Disqualified') setQualification('not_qualified');
-        else setQualification(null);
       })
       .catch(() => {
         if (cancelled) return;
         const dummy = DUMMY_LEADS.find((l) => l.id === leadId) as Lead | undefined;
         setLead(dummy ?? null);
         setMessages(DUMMY_OUTREACH.filter((o) => o.leadId === leadId));
-        if (dummy) {
-          if (dummy.status === 'Qualified')    setQualification('qualified');
-          else if (dummy.status === 'Disqualified') setQualification('not_qualified');
-          else setQualification(null);
-        }
         setIsFallback(true);
       })
       .finally(() => {
@@ -436,6 +488,43 @@ export default function LeadDetailPage() {
     setToast(msg);
     setTimeout(() => setToast(null), 3500);
   }
+
+  // ── Status change ──────────────────────────────────────────────────────────
+
+  async function handleStatusChange(status: 'New' | 'Qualified' | 'Disqualified' | 'Unsubscribed') {
+    if (!lead || statusSaving || lead.status === status) return;
+    setStatusSaving(true);
+    setStatusError(null);
+    try {
+      const updated = await updateLeadStatus(leadId, status);
+      setLead(updated);
+      showToast(t('pages.leadDetail.statusUpdatedToast'));
+    } catch {
+      setStatusError(t('pages.leadDetail.statusUpdateError'));
+    } finally {
+      setStatusSaving(false);
+    }
+  }
+
+  // ── Add note ───────────────────────────────────────────────────────────────
+
+  async function handleAddNote() {
+    if (!lead || noteSaving || !noteText.trim()) return;
+    setNoteSaving(true);
+    setNoteError(null);
+    try {
+      const updated = await addLeadNote(leadId, noteText.trim());
+      setLead(updated);
+      setNoteText('');
+      showToast(t('pages.leadDetail.noteAddedToast'));
+    } catch {
+      setNoteError(t('pages.leadDetail.noteAddError'));
+    } finally {
+      setNoteSaving(false);
+    }
+  }
+
+  // ── Outreach helpers ───────────────────────────────────────────────────────
 
   function handleGenerateOutreach() {
     if (!lead) return;
@@ -466,16 +555,6 @@ export default function LeadDetailPage() {
   function handleDiscard(id: string) {
     setMessages((prev) => prev.filter((m) => m.id !== id));
     showToast(t('pages.leadDetail.draftDiscarded'));
-  }
-
-  function handleQualify(s: QualStatus) {
-    setQualification(s);
-    const labels: Record<QualStatus, string> = {
-      qualified:     t('pages.leadDetail.qualifiedToast'),
-      not_qualified: t('pages.leadDetail.notQualifiedToast'),
-      nurturing:     t('pages.leadDetail.nurturingToast'),
-    };
-    showToast(labels[s]);
   }
 
   // ── Loading ────────────────────────────────────────────────────────────────
@@ -785,7 +864,13 @@ export default function LeadDetailPage() {
         {/* Sidebar */}
         <div className="space-y-4">
 
-          <QualificationCard value={qualification} onChange={handleQualify} />
+          {/* Status management — connected to backend */}
+          <StatusCard
+            currentStatus={lead.status}
+            onStatusChange={handleStatusChange}
+            saving={statusSaving}
+            error={statusError}
+          />
 
           {(lead.industry || lead.companySize || lead.revenueRange) && (
             <Card>
@@ -829,18 +914,15 @@ export default function LeadDetailPage() {
             </Card>
           )}
 
-          {lead.notes && (
-            <Card>
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                {t('pages.leadDetail.sectionNotes')}
-              </h3>
-              <div className="rounded-lg border border-amber-100 bg-amber-50 px-3.5 py-3">
-                <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">
-                  {lead.notes}
-                </p>
-              </div>
-            </Card>
-          )}
+          {/* Notes — display existing + add new */}
+          <NotesCard
+            notes={lead.notes}
+            noteText={noteText}
+            onNoteChange={setNoteText}
+            onAddNote={handleAddNote}
+            saving={noteSaving}
+            error={noteError}
+          />
 
           <Card>
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">

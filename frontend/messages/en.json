@@ -488,7 +488,21 @@
       "notQualifiedToast": "Lead marked as Not Qualified",
       "nurturingToast": "Lead added to Nurturing",
       "loading": "Loading lead…",
-      "errorFallback": "Could not reach the server — showing demo data"
+      "errorFallback": "Could not reach the server — showing demo data",
+      "statusCardTitle": "Lead Status",
+      "statusCardDesc": "Update the pipeline status for this lead.",
+      "statusNew": "New",
+      "statusQualified": "Qualified",
+      "statusDisqualified": "Disqualified",
+      "statusUnsubscribed": "Unsubscribed",
+      "statusSaving": "Saving status…",
+      "statusUpdatedToast": "Status updated",
+      "statusUpdateError": "Failed to update status. You may not have permission.",
+      "addNotePlaceholder": "Write a note about this lead…",
+      "addNoteButton": "Add Note",
+      "addingNote": "Adding…",
+      "noteAddedToast": "Note added",
+      "noteAddError": "Failed to add note. Please try again."
     },
     "scoring": {
       "title": "Lead Scoring",
