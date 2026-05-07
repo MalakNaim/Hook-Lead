@@ -10,4 +10,7 @@ public record LeadSummaryResult(
     string Status,
     string Source,
     DateTime ImportedAt,
-    int? IcpScore);
+    int? IcpScore,
+    string? Classification,
+    string EnrichmentStatus,
+    string EmailVerificationStatus);

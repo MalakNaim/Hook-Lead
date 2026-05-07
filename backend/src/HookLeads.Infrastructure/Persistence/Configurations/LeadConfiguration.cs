@@ -23,6 +23,19 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(l => l.Notes).HasMaxLength(5000);
         builder.Property(l => l.ScoreBreakdown).HasColumnType("nvarchar(max)");
 
+        // New contact fields
+        builder.Property(l => l.CompanyWebsite).HasMaxLength(500);
+        builder.Property(l => l.Phone).HasMaxLength(50);
+        builder.Property(l => l.WhatsApp).HasMaxLength(50);
+
+        builder.Property(l => l.EmailVerificationStatus)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        builder.Property(l => l.EnrichmentStatus)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
         builder.Property(l => l.Source)
             .HasConversion<string>()
             .HasMaxLength(50);
@@ -30,6 +43,32 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(l => l.Status)
             .HasConversion<string>()
             .HasMaxLength(50);
+
+        // Individual sub-scores — default 0
+        builder.Property(l => l.JobTitleMatchScore).HasDefaultValue(0);
+        builder.Property(l => l.IndustryMatchScore).HasDefaultValue(0);
+        builder.Property(l => l.CompanySizeMatchScore).HasDefaultValue(0);
+        builder.Property(l => l.PainMatchScore).HasDefaultValue(0);
+        builder.Property(l => l.ActivitySignalsScore).HasDefaultValue(0);
+
+        builder.Property(l => l.Classification)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        builder.Property(l => l.QualificationStatus)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        builder.Property(l => l.QualificationNotes).HasMaxLength(5000);
+
+        builder.Property(l => l.MatchedCriteria).HasColumnType("nvarchar(max)");
+        builder.Property(l => l.MismatchReasons).HasColumnType("nvarchar(max)");
+
+        builder.Property(l => l.HandoffStatus)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        builder.Property(l => l.HandoffTarget).HasMaxLength(200);
 
         builder.HasIndex(l => new { l.WorkspaceId, l.Email }).IsUnique();
 

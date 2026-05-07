@@ -10,4 +10,14 @@ public record UpdateLeadCommand(
     string? CompanySize,
     string? Geography,
     string? RevenueRange,
-    string? LinkedInUrl);
+    string? LinkedInUrl,
+    // New contact fields
+    string? CompanyWebsite,
+    string? Phone,
+    string? WhatsApp,
+    string? EmailVerificationStatus,
+    string? EnrichmentStatus,
+    string? QualificationStatus,
+    string? QualificationNotes,
+    string? HandoffStatus,
+    string? HandoffTarget);

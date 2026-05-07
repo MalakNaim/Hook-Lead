@@ -6,6 +6,33 @@ import type {
   UserSettings,
 } from '@/types';
 
+// ── Default new fields (shared across dummy records) ──────────────────────────
+
+const DEFAULT_LEAD_EXTRAS: Pick<
+  Lead,
+  | 'emailVerificationStatus'
+  | 'jobTitleMatchScore' | 'industryMatchScore' | 'companySizeMatchScore'
+  | 'painMatchScore' | 'activitySignalsScore'
+  | 'qualificationStatus' | 'qualificationNotes'
+  | 'icpProfileId' | 'matchedCriteria' | 'mismatchReasons'
+  | 'handoffStatus' | 'handoffTarget' | 'handoffAt'
+> = {
+  emailVerificationStatus: 'Unknown',
+  jobTitleMatchScore: 0,
+  industryMatchScore: 0,
+  companySizeMatchScore: 0,
+  painMatchScore: 0,
+  activitySignalsScore: 0,
+  qualificationStatus: 'Unknown',
+  qualificationNotes: null,
+  icpProfileId: null,
+  matchedCriteria: null,
+  mismatchReasons: null,
+  handoffStatus: 'NotReady',
+  handoffTarget: null,
+  handoffAt: null,
+};
+
 // ── Leads ─────────────────────────────────────────────────────────────────────
 
 export const DUMMY_LEADS: Lead[] = [
@@ -39,6 +66,14 @@ export const DUMMY_LEADS: Lead[] = [
       activitySignals: 8,
       total: 87,
     },
+    ...DEFAULT_LEAD_EXTRAS,
+    jobTitleMatchScore: 28,
+    industryMatchScore: 22,
+    companySizeMatchScore: 13,
+    painMatchScore: 16,
+    activitySignalsScore: 8,
+    emailVerificationStatus: 'Verified',
+    qualificationStatus: 'QualifiedLead',
   },
   {
     id: '2',
@@ -70,6 +105,13 @@ export const DUMMY_LEADS: Lead[] = [
       activitySignals: 5,
       total: 74,
     },
+    ...DEFAULT_LEAD_EXTRAS,
+    jobTitleMatchScore: 25,
+    industryMatchScore: 20,
+    companySizeMatchScore: 10,
+    painMatchScore: 14,
+    activitySignalsScore: 5,
+    emailVerificationStatus: 'Verified',
   },
   {
     id: '3',
@@ -88,12 +130,13 @@ export const DUMMY_LEADS: Lead[] = [
     linkedInUrl: 'https://linkedin.com/in/priya-sharma',
     source: 'LinkedIn',
     status: 'New',
-    enrichmentStatus: 'Pending',
+    enrichmentStatus: 'Unknown',
     classification: null,
     notes: null,
     importedAt: '2025-04-16T14:00:00Z',
     icpScore: null,
     scoreBreakdown: null,
+    ...DEFAULT_LEAD_EXTRAS,
   },
   {
     id: '4',
@@ -125,6 +168,15 @@ export const DUMMY_LEADS: Lead[] = [
       activitySignals: 8,
       total: 91,
     },
+    ...DEFAULT_LEAD_EXTRAS,
+    jobTitleMatchScore: 27,
+    industryMatchScore: 24,
+    companySizeMatchScore: 14,
+    painMatchScore: 18,
+    activitySignalsScore: 8,
+    emailVerificationStatus: 'Verified',
+    qualificationStatus: 'QualifiedLead',
+    handoffStatus: 'Ready',
   },
   {
     id: '5',
@@ -156,6 +208,14 @@ export const DUMMY_LEADS: Lead[] = [
       activitySignals: 2,
       total: 31,
     },
+    ...DEFAULT_LEAD_EXTRAS,
+    jobTitleMatchScore: 8,
+    industryMatchScore: 12,
+    companySizeMatchScore: 5,
+    painMatchScore: 4,
+    activitySignalsScore: 2,
+    qualificationStatus: 'NotQualified',
+    emailVerificationStatus: 'Unverified',
   },
   {
     id: '6',
@@ -174,12 +234,13 @@ export const DUMMY_LEADS: Lead[] = [
     linkedInUrl: 'https://linkedin.com/in/james-obrien',
     source: 'LinkedIn',
     status: 'New',
-    enrichmentStatus: 'Pending',
+    enrichmentStatus: 'Unknown',
     classification: null,
     notes: null,
     importedAt: '2025-04-17T16:45:00Z',
     icpScore: null,
     scoreBreakdown: null,
+    ...DEFAULT_LEAD_EXTRAS,
   },
   {
     id: '7',
@@ -211,6 +272,13 @@ export const DUMMY_LEADS: Lead[] = [
       activitySignals: 3,
       total: 61,
     },
+    ...DEFAULT_LEAD_EXTRAS,
+    jobTitleMatchScore: 20,
+    industryMatchScore: 16,
+    companySizeMatchScore: 12,
+    painMatchScore: 10,
+    activitySignalsScore: 3,
+    qualificationStatus: 'Nurturing',
   },
   {
     id: '8',
@@ -242,6 +310,12 @@ export const DUMMY_LEADS: Lead[] = [
       activitySignals: 4,
       total: 55,
     },
+    ...DEFAULT_LEAD_EXTRAS,
+    jobTitleMatchScore: 22,
+    industryMatchScore: 14,
+    companySizeMatchScore: 5,
+    painMatchScore: 10,
+    activitySignalsScore: 4,
   },
 ];
 
@@ -257,6 +331,8 @@ export const DUMMY_LEAD_SUMMARIES: LeadSummary[] = DUMMY_LEADS.map((l) => ({
   importedAt: l.importedAt,
   icpScore: l.icpScore,
   classification: l.classification,
+  enrichmentStatus: l.enrichmentStatus,
+  emailVerificationStatus: l.emailVerificationStatus,
 }));
 
 // ── Outreach ──────────────────────────────────────────────────────────────────

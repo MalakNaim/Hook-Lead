@@ -11,4 +11,11 @@ public record CreateLeadCommand(
     string? Geography,
     string? RevenueRange,
     string? LinkedInUrl,
-    string? Notes);
+    string? Notes,
+    // New contact fields
+    string? CompanyWebsite,
+    string? Phone,
+    string? WhatsApp,
+    string? EmailVerificationStatus,
+    string? EnrichmentStatus,
+    string? Source);

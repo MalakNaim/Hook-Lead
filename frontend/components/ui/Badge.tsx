@@ -65,6 +65,7 @@ export function enrichmentVariant(e: string | null): BadgeVariant {
     Partial: 'partial',
     Failed: 'failed',
     Pending: 'pending',
+    Unknown: 'neutral',
   };
   return m[e] ?? 'neutral';
 }

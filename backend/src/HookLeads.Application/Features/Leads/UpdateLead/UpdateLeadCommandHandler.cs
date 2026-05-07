@@ -2,6 +2,7 @@ using HookLeads.Application.Common.Exceptions;
 using HookLeads.Application.Common.Extensions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Common.Models;
+using HookLeads.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace HookLeads.Application.Features.Leads.UpdateLead;
@@ -42,6 +43,31 @@ public class UpdateLeadCommandHandler
         lead.Geography = command.Geography?.Trim();
         lead.RevenueRange = command.RevenueRange?.Trim();
         lead.LinkedInUrl = command.LinkedInUrl?.Trim();
+        lead.CompanyWebsite = command.CompanyWebsite?.Trim();
+        lead.Phone = command.Phone?.Trim();
+        lead.WhatsApp = command.WhatsApp?.Trim();
+
+        if (command.EmailVerificationStatus != null
+            && Enum.TryParse<EmailVerificationStatus>(command.EmailVerificationStatus, ignoreCase: true, out var ev))
+            lead.EmailVerificationStatus = ev;
+
+        if (command.EnrichmentStatus != null
+            && Enum.TryParse<EnrichmentStatus>(command.EnrichmentStatus, ignoreCase: true, out var enrichment))
+            lead.EnrichmentStatus = enrichment;
+
+        if (command.QualificationStatus != null
+            && Enum.TryParse<QualificationStatus>(command.QualificationStatus, ignoreCase: true, out var qual))
+            lead.QualificationStatus = qual;
+
+        if (command.QualificationNotes != null)
+            lead.QualificationNotes = command.QualificationNotes.Trim();
+
+        if (command.HandoffStatus != null
+            && Enum.TryParse<HandoffStatus>(command.HandoffStatus, ignoreCase: true, out var handoff))
+            lead.HandoffStatus = handoff;
+
+        if (command.HandoffTarget != null)
+            lead.HandoffTarget = command.HandoffTarget.Trim();
 
         await _context.SaveChangesAsync(cancellationToken);
 

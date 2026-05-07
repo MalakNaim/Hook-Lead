@@ -42,31 +42,80 @@ function ContactItem({
   label,
   value,
   href,
+  badge,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   href?: string;
+  badge?: React.ReactNode;
 }) {
   return (
     <div className="flex min-w-0 items-start gap-2.5">
       <span className="mt-0.5 shrink-0 text-slate-400">{icon}</span>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
-        {href ? (
-          <a
-            href={href}
-            target={href.startsWith('http') ? '_blank' : undefined}
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="block truncate text-sm text-indigo-600 transition-colors hover:text-indigo-800 hover:underline"
-          >
-            {value}
-          </a>
-        ) : (
-          <p className="truncate text-sm text-slate-800">{value}</p>
-        )}
+        <div className="flex items-center gap-1.5">
+          {href ? (
+            <a
+              href={href}
+              target={href.startsWith('http') ? '_blank' : undefined}
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="block truncate text-sm text-indigo-600 transition-colors hover:text-indigo-800 hover:underline"
+            >
+              {value}
+            </a>
+          ) : (
+            <p className="truncate text-sm text-slate-800">{value}</p>
+          )}
+          {badge}
+        </div>
       </div>
+    </div>
+  );
+}
+
+// ── Info Row ───────────────────────────────────────────────────────────────────
+
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
+      <div className="mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+// ── Section Card ───────────────────────────────────────────────────────────────
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <Card>
+      <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</h3>
+      <div className="space-y-3">{children}</div>
+    </Card>
+  );
+}
+
+// ── Placeholder Section ────────────────────────────────────────────────────────
+
+function PlaceholderSection({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-10 text-center">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+        {icon}
+      </div>
+      <p className="text-sm font-semibold text-slate-600">{title}</p>
+      <p className="mt-1 max-w-xs text-xs text-slate-400">{desc}</p>
     </div>
   );
 }
@@ -86,15 +135,15 @@ function OutreachTimeline({
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+      <PlaceholderSection
+        icon={
           <svg className="h-6 w-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
-        </div>
-        <p className="text-sm font-semibold text-slate-600">{t('pages.leadDetail.noOutreach')}</p>
-        <p className="mt-1 text-xs text-slate-400">{t('pages.leadDetail.noOutreachDesc')}</p>
-      </div>
+        }
+        title={t('pages.leadDetail.noOutreach')}
+        desc={t('pages.leadDetail.noOutreachDesc')}
+      />
     );
   }
 
@@ -432,16 +481,12 @@ export default function LeadDetailPage() {
   const [generating, setGenerating] = useState(false);
   const [toast, setToast]           = useState<string | null>(null);
 
-  // Status update state
   const [statusSaving, setStatusSaving] = useState(false);
   const [statusError, setStatusError]   = useState<string | null>(null);
 
-  // Note state
   const [noteText, setNoteText]     = useState('');
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteError, setNoteError]   = useState<string | null>(null);
-
-  // ── Fetch lead ─────────────────────────────────────────────────────────────
 
   const fetchLead = useCallback(async () => {
     try {
@@ -482,14 +527,10 @@ export default function LeadDetailPage() {
     return () => { cancelled = true; };
   }, [leadId]);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 3500);
   }
-
-  // ── Status change ──────────────────────────────────────────────────────────
 
   async function handleStatusChange(status: 'New' | 'Qualified' | 'Disqualified' | 'Unsubscribed') {
     if (!lead || statusSaving || lead.status === status) return;
@@ -505,8 +546,6 @@ export default function LeadDetailPage() {
       setStatusSaving(false);
     }
   }
-
-  // ── Add note ───────────────────────────────────────────────────────────────
 
   async function handleAddNote() {
     if (!lead || noteSaving || !noteText.trim()) return;
@@ -524,8 +563,6 @@ export default function LeadDetailPage() {
     }
   }
 
-  // ── Outreach helpers ───────────────────────────────────────────────────────
-
   function handleGenerateOutreach() {
     if (!lead) return;
     setGenerating(true);
@@ -534,7 +571,7 @@ export default function LeadDetailPage() {
         id: `gen-${Date.now()}`,
         leadId: lead.id,
         subject: `Reaching out — ${lead.company ?? lead.firstName} × Hook Leads`,
-        body: `Hi ${lead.firstName},\n\nI came across your profile and was genuinely impressed by the work you and the team are doing at ${lead.company ?? 'your company'}.\n\nGiven your role as ${lead.jobTitle ?? 'a key decision-maker'}, I thought Hook Leads could be a strong fit — we help teams like yours score and prioritise inbound leads 10× faster using AI, then generate personalised outreach in seconds.\n\nWould you be open to a quick 20-minute call this week?\n\nBest,\nYazan`,
+        body: `Hi ${lead.firstName},\n\nI came across your profile and was genuinely impressed by the work you and the team are doing at ${lead.company ?? 'your company'}.\n\nGiven your role as ${lead.jobTitle ?? 'a key decision-maker'}, I thought Hook Leads could be a strong fit.\n\nWould you be open to a quick 20-minute call this week?\n\nBest,\nYazan`,
         status: 'Draft',
         createdAt: new Date().toISOString(),
         sentAt: null,
@@ -557,13 +594,7 @@ export default function LeadDetailPage() {
     showToast(t('pages.leadDetail.draftDiscarded'));
   }
 
-  // ── Loading ────────────────────────────────────────────────────────────────
-
-  if (loading) {
-    return <LeadDetailSkeleton />;
-  }
-
-  // ── 404 ────────────────────────────────────────────────────────────────────
+  if (loading) return <LeadDetailSkeleton />;
 
   if (!lead) {
     return (
@@ -582,11 +613,25 @@ export default function LeadDetailPage() {
     );
   }
 
-  // ── Derived values ─────────────────────────────────────────────────────────
-
   const fullName   = `${lead.firstName} ${lead.lastName}`;
   const initials   = `${lead.firstName[0]}${lead.lastName[0]}`;
   const scoreColor = lead.icpScore !== null ? getScoreColor(lead.icpScore) : '#94a3b8';
+
+  const emailVerBadge = lead.emailVerificationStatus !== 'Unknown' ? (
+    <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+      lead.emailVerificationStatus === 'Verified'
+        ? 'bg-emerald-100 text-emerald-700'
+        : 'bg-red-100 text-red-600'
+    }`}>
+      {t(`pages.leadDetail.emailVer${lead.emailVerificationStatus}`)}
+    </span>
+  ) : null;
+
+  // Compute derived score total from sub-scores if no legacy icpScore
+  const subScoreTotal =
+    lead.jobTitleMatchScore + lead.industryMatchScore +
+    lead.companySizeMatchScore + lead.painMatchScore + lead.activitySignalsScore;
+  const hasSubScores = subScoreTotal > 0;
 
   return (
     <div className="max-w-5xl space-y-6">
@@ -639,7 +684,7 @@ export default function LeadDetailPage() {
                     {lead.classification}
                   </Badge>
                 )}
-                {lead.enrichmentStatus && (
+                {lead.enrichmentStatus !== 'Unknown' && (
                   <Badge variant={enrichmentVariant(lead.enrichmentStatus)}>
                     {lead.enrichmentStatus}
                   </Badge>
@@ -689,6 +734,7 @@ export default function LeadDetailPage() {
               label={t('pages.leadDetail.contactEmail')}
               value={lead.email}
               href={`mailto:${lead.email}`}
+              badge={emailVerBadge}
             />
             {lead.phone && (
               <ContactItem
@@ -796,17 +842,18 @@ export default function LeadDetailPage() {
               )}
             </div>
 
-            {lead.scoreBreakdown ? (
+            {/* Sub-score bars — show if explicit sub-scores OR legacy scoreBreakdown */}
+            {hasSubScores ? (
               <div className="space-y-4">
-                <BreakdownBar label={t('pages.leadDetail.jobTitleMatch')}    value={lead.scoreBreakdown.jobTitleMatch}    max={30} />
-                <BreakdownBar label={t('pages.leadDetail.industryMatch')}    value={lead.scoreBreakdown.industryMatch}    max={25} />
-                <BreakdownBar label={t('pages.leadDetail.companySizeMatch')} value={lead.scoreBreakdown.companySizeMatch} max={15} />
-                <BreakdownBar label={t('pages.leadDetail.painMatch')}        value={lead.scoreBreakdown.painMatch}        max={20} />
-                <BreakdownBar label={t('pages.leadDetail.activitySignals')}  value={lead.scoreBreakdown.activitySignals}  max={10} />
+                <BreakdownBar label={t('pages.leadDetail.jobTitleMatch')}    value={lead.jobTitleMatchScore}    max={30} />
+                <BreakdownBar label={t('pages.leadDetail.industryMatch')}    value={lead.industryMatchScore}    max={25} />
+                <BreakdownBar label={t('pages.leadDetail.companySizeMatch')} value={lead.companySizeMatchScore} max={15} />
+                <BreakdownBar label={t('pages.leadDetail.painMatch')}        value={lead.painMatchScore}        max={20} />
+                <BreakdownBar label={t('pages.leadDetail.activitySignals')}  value={lead.activitySignalsScore}  max={10} />
                 <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                   <span className="text-xs font-semibold text-slate-500">{t('pages.leadDetail.totalScore')}</span>
                   <span className="text-base font-bold tabular-nums" style={{ color: scoreColor }}>
-                    {lead.scoreBreakdown.total} / 100
+                    {subScoreTotal} / 100
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 pt-1">
@@ -822,20 +869,49 @@ export default function LeadDetailPage() {
                   ))}
                 </div>
               </div>
+            ) : lead.scoreBreakdown ? (
+              <div className="space-y-4">
+                <BreakdownBar label={t('pages.leadDetail.jobTitleMatch')}    value={lead.scoreBreakdown.jobTitleMatch}    max={30} />
+                <BreakdownBar label={t('pages.leadDetail.industryMatch')}    value={lead.scoreBreakdown.industryMatch}    max={25} />
+                <BreakdownBar label={t('pages.leadDetail.companySizeMatch')} value={lead.scoreBreakdown.companySizeMatch} max={15} />
+                <BreakdownBar label={t('pages.leadDetail.painMatch')}        value={lead.scoreBreakdown.painMatch}        max={20} />
+                <BreakdownBar label={t('pages.leadDetail.activitySignals')}  value={lead.scoreBreakdown.activitySignals}  max={10} />
+                <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                  <span className="text-xs font-semibold text-slate-500">{t('pages.leadDetail.totalScore')}</span>
+                  <span className="text-base font-bold tabular-nums" style={{ color: scoreColor }}>
+                    {lead.scoreBreakdown.total} / 100
+                  </span>
+                </div>
+              </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+              <PlaceholderSection
+                icon={
                   <svg className="h-6 w-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                </div>
-                <p className="text-sm font-semibold text-slate-600">{t('pages.leadDetail.notYetScored')}</p>
-                <p className="mt-1 text-xs text-slate-400 max-w-xs">{t('pages.leadDetail.scoringPending')}</p>
-              </div>
+                }
+                title={t('pages.leadDetail.notYetScored')}
+                desc={t('pages.leadDetail.scoringPending')}
+              />
             )}
           </Card>
 
-          {/* Outreach Timeline */}
+          {/* Score History Placeholder */}
+          <Card>
+            <h2 className="mb-1 text-sm font-semibold text-slate-900">{t('pages.leadDetail.scoreHistoryTitle')}</h2>
+            <p className="mb-4 text-xs text-slate-500">{t('pages.leadDetail.scoreHistoryDesc')}</p>
+            <PlaceholderSection
+              icon={
+                <svg className="h-6 w-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+              }
+              title={t('pages.leadDetail.scoreHistoryEmpty')}
+              desc={t('pages.leadDetail.scoreHistoryEmptyDesc')}
+            />
+          </Card>
+
+          {/* Outreach / Conversation History */}
           <Card>
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -864,7 +940,7 @@ export default function LeadDetailPage() {
         {/* Sidebar */}
         <div className="space-y-4">
 
-          {/* Status management — connected to backend */}
+          {/* Status management */}
           <StatusCard
             currentStatus={lead.status}
             onStatusChange={handleStatusChange}
@@ -872,49 +948,127 @@ export default function LeadDetailPage() {
             error={statusError}
           />
 
-          {(lead.industry || lead.companySize || lead.revenueRange) && (
-            <Card>
-              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                {t('pages.leadDetail.sectionCompany')}
-              </h3>
-              <div className="space-y-3">
-                {lead.industry && (
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                      {t('pages.leadDetail.sectionIndustry')}
-                    </p>
-                    <p className="mt-0.5 text-sm text-slate-800">{lead.industry}</p>
-                  </div>
-                )}
-                {lead.companySize && (
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                      {t('pages.leadDetail.sectionCompanySize')}
-                    </p>
-                    <p className="mt-0.5 text-sm text-slate-800">{lead.companySize}</p>
-                  </div>
-                )}
-                {lead.revenueRange && (
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                      {t('pages.leadDetail.sectionRevenue')}
-                    </p>
-                    <p className="mt-0.5 text-sm text-slate-800">{lead.revenueRange}</p>
-                  </div>
-                )}
-                {lead.geography && (
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                      {t('pages.leadDetail.sectionLocation')}
-                    </p>
-                    <p className="mt-0.5 text-sm text-slate-800">{lead.geography}</p>
-                  </div>
-                )}
-              </div>
-            </Card>
+          {/* Qualification */}
+          <SectionCard title={t('pages.leadDetail.sectionQualification')}>
+            <InfoRow
+              label={t('pages.leadDetail.qualificationStatusLabel')}
+              value={
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  lead.qualificationStatus === 'QualifiedLead' ? 'bg-emerald-100 text-emerald-700' :
+                  lead.qualificationStatus === 'NotQualified'  ? 'bg-red-100 text-red-600' :
+                  lead.qualificationStatus === 'Nurturing'     ? 'bg-amber-100 text-amber-700' :
+                  'bg-slate-100 text-slate-500'
+                }`}>
+                  {lead.qualificationStatus === 'QualifiedLead' ? t('pages.leadDetail.qualQualifiedLead') :
+                   lead.qualificationStatus === 'NotQualified'  ? t('pages.leadDetail.qualNotQualified') :
+                   lead.qualificationStatus === 'Nurturing'     ? t('pages.leadDetail.qualNurturing') :
+                   t('pages.leadDetail.qualUnknown')}
+                </span>
+              }
+            />
+            {lead.qualificationNotes && (
+              <InfoRow
+                label={t('pages.leadDetail.qualificationNotesLabel')}
+                value={<p className="text-sm text-slate-700">{lead.qualificationNotes}</p>}
+              />
+            )}
+          </SectionCard>
+
+          {/* Enrichment */}
+          <SectionCard title={t('pages.leadDetail.sectionEnrichment')}>
+            <InfoRow
+              label={t('pages.leadDetail.enrichmentStatusLabel')}
+              value={
+                <Badge variant={enrichmentVariant(lead.enrichmentStatus)}>
+                  {lead.enrichmentStatus}
+                </Badge>
+              }
+            />
+            <InfoRow
+              label={t('pages.leadDetail.emailVerificationLabel')}
+              value={
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  lead.emailVerificationStatus === 'Verified'   ? 'bg-emerald-100 text-emerald-700' :
+                  lead.emailVerificationStatus === 'Unverified' ? 'bg-red-100 text-red-600' :
+                  'bg-slate-100 text-slate-500'
+                }`}>
+                  {t(`pages.leadDetail.emailVer${lead.emailVerificationStatus}`)}
+                </span>
+              }
+            />
+          </SectionCard>
+
+          {/* ICP Match */}
+          {(lead.matchedCriteria || lead.mismatchReasons) && (
+            <SectionCard title={t('pages.leadDetail.sectionIcpMatch')}>
+              {lead.matchedCriteria && (
+                <InfoRow
+                  label={t('pages.leadDetail.matchedCriteriaLabel')}
+                  value={<p className="text-xs text-slate-700">{lead.matchedCriteria}</p>}
+                />
+              )}
+              {lead.mismatchReasons && (
+                <InfoRow
+                  label={t('pages.leadDetail.mismatchReasonsLabel')}
+                  value={<p className="text-xs text-slate-700">{lead.mismatchReasons}</p>}
+                />
+              )}
+            </SectionCard>
           )}
 
-          {/* Notes — display existing + add new */}
+          {/* Handoff */}
+          <SectionCard title={t('pages.leadDetail.sectionHandoff')}>
+            <InfoRow
+              label={t('pages.leadDetail.handoffStatusLabel')}
+              value={
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  lead.handoffStatus === 'Sent'  ? 'bg-emerald-100 text-emerald-700' :
+                  lead.handoffStatus === 'Ready' ? 'bg-blue-100 text-blue-700' :
+                  'bg-slate-100 text-slate-500'
+                }`}>
+                  {lead.handoffStatus === 'Sent'  ? t('pages.leadDetail.handoffSent') :
+                   lead.handoffStatus === 'Ready' ? t('pages.leadDetail.handoffReady') :
+                   t('pages.leadDetail.handoffNotReady')}
+                </span>
+              }
+            />
+            {lead.handoffTarget && (
+              <InfoRow
+                label={t('pages.leadDetail.handoffTargetLabel')}
+                value={<p className="text-sm text-slate-700">{lead.handoffTarget}</p>}
+              />
+            )}
+            {lead.handoffAt && (
+              <InfoRow
+                label={t('pages.leadDetail.handoffAtLabel')}
+                value={
+                  <p className="text-sm text-slate-700">
+                    {new Date(lead.handoffAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                }
+              />
+            )}
+          </SectionCard>
+
+          {/* Company info */}
+          {(lead.industry || lead.companySize || lead.revenueRange || lead.geography) && (
+            <SectionCard title={t('pages.leadDetail.sectionCompany')}>
+              {lead.industry && (
+                <InfoRow label={t('pages.leadDetail.sectionIndustry')} value={<p className="text-sm text-slate-800">{lead.industry}</p>} />
+              )}
+              {lead.companySize && (
+                <InfoRow label={t('pages.leadDetail.sectionCompanySize')} value={<p className="text-sm text-slate-800">{lead.companySize}</p>} />
+              )}
+              {lead.revenueRange && (
+                <InfoRow label={t('pages.leadDetail.sectionRevenue')} value={<p className="text-sm text-slate-800">{lead.revenueRange}</p>} />
+              )}
+              {lead.geography && (
+                <InfoRow label={t('pages.leadDetail.sectionLocation')} value={<p className="text-sm text-slate-800">{lead.geography}</p>} />
+              )}
+            </SectionCard>
+          )}
+
+          {/* Notes */}
           <NotesCard
             notes={lead.notes}
             noteText={noteText}
@@ -924,35 +1078,19 @@ export default function LeadDetailPage() {
             error={noteError}
           />
 
-          <Card>
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-              {t('pages.leadDetail.sectionLeadInfo')}
-            </h3>
-            <div className="space-y-2.5">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  {t('pages.leadDetail.statusLabel')}
+          {/* Lead Info */}
+          <SectionCard title={t('pages.leadDetail.sectionLeadInfo')}>
+            <InfoRow label={t('pages.leadDetail.statusLabel')} value={<p className="text-sm font-medium text-slate-700">{lead.status}</p>} />
+            <InfoRow label={t('pages.leadDetail.sourceLabel')} value={<p className="text-sm text-slate-700">{lead.source}</p>} />
+            <InfoRow
+              label={t('pages.leadDetail.importedLabel')}
+              value={
+                <p className="text-sm text-slate-700">
+                  {new Date(lead.importedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </p>
-                <p className="mt-0.5 text-sm font-medium text-slate-700">{lead.status}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  {t('pages.leadDetail.sourceLabel')}
-                </p>
-                <p className="mt-0.5 text-sm text-slate-700">{lead.source}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  {t('pages.leadDetail.importedLabel')}
-                </p>
-                <p className="mt-0.5 text-sm text-slate-700">
-                  {new Date(lead.importedAt).toLocaleDateString('en-US', {
-                    month: 'long', day: 'numeric', year: 'numeric',
-                  })}
-                </p>
-              </div>
-            </div>
-          </Card>
+              }
+            />
+          </SectionCard>
         </div>
       </div>
 

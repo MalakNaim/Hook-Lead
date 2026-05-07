@@ -1,3 +1,4 @@
+using HookLeads.Application.Common.Extensions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Common.Models;
 using HookLeads.Domain.Enums;
@@ -41,16 +42,13 @@ public class GetLeadsQueryHandler
 
         var totalCount = await q.CountAsync(cancellationToken);
 
-        var items = await q
+        var leads = await q
             .OrderByDescending(l => l.ImportedAt)
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
-            .Select(l => new LeadSummaryResult(
-                l.Id, l.FirstName, l.LastName, l.Email,
-                l.Company, l.JobTitle,
-                l.Status.ToString(), l.Source.ToString(),
-                l.ImportedAt, l.IcpScore))
             .ToListAsync(cancellationToken);
+
+        var items = leads.Select(l => l.ToLeadSummaryResult()).ToList();
 
         return new PagedResult<LeadSummaryResult>(items, totalCount, query.PageNumber, query.PageSize);
     }

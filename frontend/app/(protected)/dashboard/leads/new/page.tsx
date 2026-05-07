@@ -39,6 +39,9 @@ const INPUT_CLASS =
 const INPUT_ERROR_CLASS =
   'block w-full rounded-lg border border-red-400 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:bg-slate-50';
 
+const SELECT_CLASS =
+  'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:bg-slate-50';
+
 // ── Section header ─────────────────────────────────────────────────────────────
 
 function SectionHeader({ title }: { title: string }) {
@@ -51,7 +54,7 @@ function SectionHeader({ title }: { title: string }) {
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
-type FormErrors = Partial<Record<keyof CreateLeadRequest, string>>;
+type FormErrors = Partial<Record<string, string>>;
 
 interface FormState {
   firstName: string;
@@ -59,11 +62,16 @@ interface FormState {
   email: string;
   jobTitle: string;
   company: string;
+  companyWebsite: string;
   industry: string;
   companySize: string;
   geography: string;
   revenueRange: string;
   linkedInUrl: string;
+  phone: string;
+  whatsapp: string;
+  emailVerificationStatus: string;
+  enrichmentStatus: string;
   notes: string;
 }
 
@@ -73,11 +81,16 @@ const EMPTY_FORM: FormState = {
   email: '',
   jobTitle: '',
   company: '',
+  companyWebsite: '',
   industry: '',
   companySize: '',
   geography: '',
   revenueRange: '',
   linkedInUrl: '',
+  phone: '',
+  whatsapp: '',
+  emailVerificationStatus: '',
+  enrichmentStatus: '',
   notes: '',
 };
 
@@ -109,6 +122,9 @@ export default function NewLeadPage() {
     if (form.linkedInUrl.trim() && !/^https?:\/\//i.test(form.linkedInUrl.trim())) {
       e.linkedInUrl = 'LinkedIn URL must start with https://';
     }
+    if (form.companyWebsite.trim() && !/^https?:\/\//i.test(form.companyWebsite.trim())) {
+      e.companyWebsite = 'Website URL must start with https://';
+    }
     return e;
   }
 
@@ -132,6 +148,12 @@ export default function NewLeadPage() {
       ...(form.revenueRange.trim() && { revenueRange: form.revenueRange.trim() }),
       ...(form.linkedInUrl.trim() && { linkedInUrl: form.linkedInUrl.trim() }),
       ...(form.notes.trim() && { notes: form.notes.trim() }),
+      ...(form.companyWebsite.trim() && { companyWebsite: form.companyWebsite.trim() }),
+      ...(form.phone.trim() && { phone: form.phone.trim() }),
+      ...(form.whatsapp.trim() && { whatsApp: form.whatsapp.trim() }),
+      ...(form.emailVerificationStatus && { emailVerificationStatus: form.emailVerificationStatus }),
+      ...(form.enrichmentStatus && { enrichmentStatus: form.enrichmentStatus }),
+      source: 'Manual',
     };
 
     setSubmitting(true);
@@ -201,7 +223,7 @@ export default function NewLeadPage() {
                   className={errors.lastName ? INPUT_ERROR_CLASS : INPUT_CLASS}
                 />
               </Field>
-              <Field label={t('pages.leads.fieldEmail')} required error={errors.email} >
+              <Field label={t('pages.leads.fieldEmail')} required error={errors.email}>
                 <input
                   type="email"
                   value={form.email}
@@ -209,8 +231,20 @@ export default function NewLeadPage() {
                   placeholder={t('pages.leads.placeholderEmail')}
                   disabled={disabled}
                   autoComplete="email"
-                  className={`sm:col-span-2 ${errors.email ? INPUT_ERROR_CLASS : INPUT_CLASS}`}
+                  className={errors.email ? INPUT_ERROR_CLASS : INPUT_CLASS}
                 />
+              </Field>
+              <Field label={t('pages.leads.fieldEmailVerification')} error={errors.emailVerificationStatus}>
+                <select
+                  value={form.emailVerificationStatus}
+                  onChange={(e) => set('emailVerificationStatus', e.target.value)}
+                  disabled={disabled}
+                  className={SELECT_CLASS}
+                >
+                  <option value="">{t('pages.leads.optionUnknown')}</option>
+                  <option value="Verified">{t('pages.leads.optionVerified')}</option>
+                  <option value="Unverified">{t('pages.leads.optionUnverified')}</option>
+                </select>
               </Field>
               <Field label={t('pages.leads.fieldJobTitle')} error={errors.jobTitle}>
                 <input
@@ -232,6 +266,26 @@ export default function NewLeadPage() {
                   className={errors.linkedInUrl ? INPUT_ERROR_CLASS : INPUT_CLASS}
                 />
               </Field>
+              <Field label={t('pages.leads.fieldPhone')} error={errors.phone}>
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => set('phone', e.target.value)}
+                  placeholder={t('pages.leads.placeholderPhone')}
+                  disabled={disabled}
+                  className={errors.phone ? INPUT_ERROR_CLASS : INPUT_CLASS}
+                />
+              </Field>
+              <Field label={t('pages.leads.fieldWhatsApp')} error={errors.whatsapp}>
+                <input
+                  type="tel"
+                  value={form.whatsapp}
+                  onChange={(e) => set('whatsapp', e.target.value)}
+                  placeholder={t('pages.leads.placeholderWhatsApp')}
+                  disabled={disabled}
+                  className={errors.whatsapp ? INPUT_ERROR_CLASS : INPUT_CLASS}
+                />
+              </Field>
             </div>
           </div>
 
@@ -247,6 +301,16 @@ export default function NewLeadPage() {
                   placeholder={t('pages.leads.placeholderCompany')}
                   disabled={disabled}
                   className={errors.company ? INPUT_ERROR_CLASS : INPUT_CLASS}
+                />
+              </Field>
+              <Field label={t('pages.leads.fieldCompanyWebsite')} error={errors.companyWebsite}>
+                <input
+                  type="url"
+                  value={form.companyWebsite}
+                  onChange={(e) => set('companyWebsite', e.target.value)}
+                  placeholder={t('pages.leads.placeholderCompanyWebsite')}
+                  disabled={disabled}
+                  className={errors.companyWebsite ? INPUT_ERROR_CLASS : INPUT_CLASS}
                 />
               </Field>
               <Field label={t('pages.leads.fieldIndustry')} error={errors.industry}>
@@ -288,6 +352,26 @@ export default function NewLeadPage() {
                   disabled={disabled}
                   className={errors.revenueRange ? INPUT_ERROR_CLASS : INPUT_CLASS}
                 />
+              </Field>
+            </div>
+          </div>
+
+          {/* ── Enrichment ── */}
+          <div>
+            <SectionHeader title={t('pages.leads.sectionEnrichment')} />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label={t('pages.leads.fieldEnrichmentStatus')} error={errors.enrichmentStatus}>
+                <select
+                  value={form.enrichmentStatus}
+                  onChange={(e) => set('enrichmentStatus', e.target.value)}
+                  disabled={disabled}
+                  className={SELECT_CLASS}
+                >
+                  <option value="">{t('pages.leads.optionUnknown')}</option>
+                  <option value="Enriched">{t('pages.leads.optionEnriched')}</option>
+                  <option value="Partial">{t('pages.leads.optionPartial')}</option>
+                  <option value="Failed">{t('pages.leads.optionFailed')}</option>
+                </select>
               </Field>
             </div>
           </div>

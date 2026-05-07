@@ -1,5 +1,8 @@
 import { apiFetch } from '@/lib/api';
-import type { Lead, LeadSummary, LeadStatus, PagedResult, ScoreBreakdown } from '@/types';
+import type {
+  Lead, LeadSummary, LeadStatus, EmailVerificationStatus, EnrichmentStatus,
+  LeadClassification, QualificationStatus, HandoffStatus, PagedResult, ScoreBreakdown,
+} from '@/types';
 
 // ── Mutation payloads ──────────────────────────────────────────────────────────
 
@@ -15,6 +18,12 @@ export interface CreateLeadRequest {
   revenueRange?: string;
   linkedInUrl?: string;
   notes?: string;
+  companyWebsite?: string;
+  phone?: string;
+  whatsApp?: string;
+  emailVerificationStatus?: string;
+  enrichmentStatus?: string;
+  source?: string;
 }
 
 // ── Query params ───────────────────────────────────────────────────────────────
@@ -27,7 +36,7 @@ export interface GetLeadsParams {
   maxScore?: number;
 }
 
-// ── Backend response shapes (what /api/leads actually returns) ─────────────────
+// ── Backend response shapes ────────────────────────────────────────────────────
 
 interface ApiLeadSummary {
   id: string;
@@ -40,6 +49,9 @@ interface ApiLeadSummary {
   source: string;
   importedAt: string;
   icpScore: number | null;
+  classification: string | null;
+  enrichmentStatus: string;
+  emailVerificationStatus: string;
 }
 
 interface ApiLead {
@@ -54,12 +66,31 @@ interface ApiLead {
   geography: string | null;
   revenueRange: string | null;
   linkedInUrl: string | null;
+  companyWebsite: string | null;
+  phone: string | null;
+  whatsApp: string | null;
+  emailVerificationStatus: string;
+  enrichmentStatus: string;
   source: string;
   status: string;
   notes: string | null;
   importedAt: string;
+  jobTitleMatchScore: number;
+  industryMatchScore: number;
+  companySizeMatchScore: number;
+  painMatchScore: number;
+  activitySignalsScore: number;
   icpScore: number | null;
   scoreBreakdown: string | null;
+  classification: string | null;
+  qualificationStatus: string;
+  qualificationNotes: string | null;
+  icpProfileId: string | null;
+  matchedCriteria: string | null;
+  mismatchReasons: string | null;
+  handoffStatus: string;
+  handoffTarget: string | null;
+  handoffAt: string | null;
 }
 
 interface ApiPagedResult<T> {
@@ -93,7 +124,9 @@ function mapApiSummary(api: ApiLeadSummary): LeadSummary {
     source: api.source,
     importedAt: api.importedAt,
     icpScore: api.icpScore,
-    classification: null,
+    classification: (api.classification as LeadClassification | null) ?? null,
+    enrichmentStatus: (api.enrichmentStatus as EnrichmentStatus) ?? 'Unknown',
+    emailVerificationStatus: (api.emailVerificationStatus as EmailVerificationStatus) ?? 'Unknown',
   };
 }
 
@@ -103,24 +136,38 @@ function mapApiLead(api: ApiLead): Lead {
     firstName: api.firstName,
     lastName: api.lastName,
     email: api.email,
-    phone: null,
-    whatsapp: null,
     jobTitle: api.jobTitle,
     company: api.company,
-    companyWebsite: null,
     industry: api.industry,
     companySize: api.companySize,
     geography: api.geography,
     revenueRange: api.revenueRange,
     linkedInUrl: api.linkedInUrl,
+    companyWebsite: api.companyWebsite,
+    phone: api.phone,
+    whatsapp: api.whatsApp,
+    emailVerificationStatus: (api.emailVerificationStatus as EmailVerificationStatus) ?? 'Unknown',
+    enrichmentStatus: (api.enrichmentStatus as EnrichmentStatus) ?? 'Unknown',
     source: api.source,
     status: api.status as LeadStatus,
-    enrichmentStatus: null,
-    classification: null,
     notes: api.notes,
     importedAt: api.importedAt,
+    jobTitleMatchScore: api.jobTitleMatchScore ?? 0,
+    industryMatchScore: api.industryMatchScore ?? 0,
+    companySizeMatchScore: api.companySizeMatchScore ?? 0,
+    painMatchScore: api.painMatchScore ?? 0,
+    activitySignalsScore: api.activitySignalsScore ?? 0,
     icpScore: api.icpScore,
     scoreBreakdown: parseScoreBreakdown(api.scoreBreakdown),
+    classification: (api.classification as LeadClassification | null) ?? null,
+    qualificationStatus: (api.qualificationStatus as QualificationStatus) ?? 'Unknown',
+    qualificationNotes: api.qualificationNotes,
+    icpProfileId: api.icpProfileId,
+    matchedCriteria: api.matchedCriteria,
+    mismatchReasons: api.mismatchReasons,
+    handoffStatus: (api.handoffStatus as HandoffStatus) ?? 'NotReady',
+    handoffTarget: api.handoffTarget,
+    handoffAt: api.handoffAt,
   };
 }
 

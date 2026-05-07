@@ -22,8 +22,12 @@ export interface PagedResult<T> {
 // ── Leads ─────────────────────────────────────────────────────────────────────
 
 export type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Disqualified' | 'Unsubscribed';
-export type EnrichmentStatus = 'Enriched' | 'Partial' | 'Failed' | 'Pending';
+export type EmailVerificationStatus = 'Unknown' | 'Verified' | 'Unverified';
+export type EnrichmentStatus = 'Unknown' | 'Enriched' | 'Partial' | 'Failed';
 export type LeadClassification = 'Hot' | 'Warm' | 'Cold' | 'Reject';
+export type QualificationStatus = 'Unknown' | 'QualifiedLead' | 'NotQualified' | 'Nurturing';
+export type HandoffStatus = 'NotReady' | 'Ready' | 'Sent';
+export type LeadSource = 'Manual' | 'LinkedIn' | 'CSV' | 'LinkedInUrl' | 'GoogleSearch' | 'CompanyWebsite' | 'PublicProfile';
 
 export interface ScoreBreakdown {
   jobTitleMatch: number;    // 0–30
@@ -46,6 +50,8 @@ export interface LeadSummary {
   importedAt: string;
   icpScore: number | null;
   classification: LeadClassification | null;
+  enrichmentStatus: EnrichmentStatus;
+  emailVerificationStatus: EmailVerificationStatus;
 }
 
 export interface Lead {
@@ -53,24 +59,52 @@ export interface Lead {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string | null;
-  whatsapp: string | null;
   jobTitle: string | null;
   company: string | null;
-  companyWebsite: string | null;
   industry: string | null;
   companySize: string | null;
   geography: string | null;
   revenueRange: string | null;
   linkedInUrl: string | null;
+
+  // New contact fields
+  companyWebsite: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  emailVerificationStatus: EmailVerificationStatus;
+
+  // Enrichment
+  enrichmentStatus: EnrichmentStatus;
+
+  // Source / status
   source: string;
   status: LeadStatus;
-  enrichmentStatus: EnrichmentStatus | null;
-  classification: LeadClassification | null;
   notes: string | null;
   importedAt: string;
+
+  // Scoring
+  jobTitleMatchScore: number;
+  industryMatchScore: number;
+  companySizeMatchScore: number;
+  painMatchScore: number;
+  activitySignalsScore: number;
   icpScore: number | null;
   scoreBreakdown: ScoreBreakdown | null;
+
+  // Classification + qualification
+  classification: LeadClassification | null;
+  qualificationStatus: QualificationStatus;
+  qualificationNotes: string | null;
+
+  // ICP metadata
+  icpProfileId: string | null;
+  matchedCriteria: string | null;
+  mismatchReasons: string | null;
+
+  // Handoff
+  handoffStatus: HandoffStatus;
+  handoffTarget: string | null;
+  handoffAt: string | null;
 }
 
 // ── ICP ───────────────────────────────────────────────────────────────────────

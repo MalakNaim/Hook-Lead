@@ -25,6 +25,20 @@ public class CreateLeadCommandHandler
         var workspaceId = _currentWorkspace.WorkspaceId
             ?? throw new AppException("Workspace context is required.", 401);
 
+        var source = command.Source != null && Enum.TryParse<LeadSource>(command.Source, ignoreCase: true, out var parsedSource)
+            ? parsedSource
+            : LeadSource.Manual;
+
+        var emailVerification = command.EmailVerificationStatus != null
+            && Enum.TryParse<EmailVerificationStatus>(command.EmailVerificationStatus, ignoreCase: true, out var parsedEv)
+            ? parsedEv
+            : EmailVerificationStatus.Unknown;
+
+        var enrichment = command.EnrichmentStatus != null
+            && Enum.TryParse<EnrichmentStatus>(command.EnrichmentStatus, ignoreCase: true, out var parsedEnrichment)
+            ? parsedEnrichment
+            : EnrichmentStatus.Unknown;
+
         var lead = new Lead
         {
             Id = Guid.NewGuid(),
@@ -40,7 +54,12 @@ public class CreateLeadCommandHandler
             RevenueRange = command.RevenueRange?.Trim(),
             LinkedInUrl = command.LinkedInUrl?.Trim(),
             Notes = command.Notes?.Trim(),
-            Source = LeadSource.Manual,
+            CompanyWebsite = command.CompanyWebsite?.Trim(),
+            Phone = command.Phone?.Trim(),
+            WhatsApp = command.WhatsApp?.Trim(),
+            EmailVerificationStatus = emailVerification,
+            EnrichmentStatus = enrichment,
+            Source = source,
             Status = LeadStatus.New,
             ImportedAt = DateTime.UtcNow,
         };

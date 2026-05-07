@@ -7,7 +7,7 @@ import { DUMMY_LEADS } from '@/lib/dummy-data';
 import { getLeads } from '@/services/leadsService';
 import type { LeadSummary, LeadStatus } from '@/types';
 import { ScoreRing } from '@/components/ui/ScoreRing';
-import { Badge, statusVariant } from '@/components/ui/Badge';
+import { Badge, statusVariant, classificationVariant, enrichmentVariant } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useLocale } from '@/lib/i18n';
 
@@ -345,6 +345,7 @@ export default function LeadsPage() {
                   <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">{t('pages.leads.colEmail')}</th>
                   <th className="hidden px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500 xl:table-cell">{t('pages.leads.colLinkedIn')}</th>
                   <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">{t('pages.leads.colScore')}</th>
+                  <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">{t('pages.leads.colClassification')}</th>
                   <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">{t('pages.leads.colStatus')}</th>
                   <th className="w-10 px-4 py-3" />
                 </tr>
@@ -400,6 +401,9 @@ export default function LeadsPage() {
                   </th>
                   <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                     {t('pages.leads.colScore')}
+                  </th>
+                  <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">
+                    {t('pages.leads.colClassification')}
                   </th>
                   <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                     {t('pages.leads.colStatus')}
@@ -477,6 +481,17 @@ export default function LeadsPage() {
                         </div>
                       ) : (
                         <span className="text-slate-300" aria-label="Not scored">—</span>
+                      )}
+                    </td>
+
+                    {/* Classification */}
+                    <td className="hidden px-4 py-3.5 lg:table-cell">
+                      {lead.classification ? (
+                        <Badge variant={classificationVariant(lead.classification)}>
+                          {lead.classification}
+                        </Badge>
+                      ) : (
+                        <span className="text-slate-300" aria-label="Not classified">—</span>
                       )}
                     </td>
 

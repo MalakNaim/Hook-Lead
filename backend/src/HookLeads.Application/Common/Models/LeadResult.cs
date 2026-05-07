@@ -12,9 +12,43 @@ public record LeadResult(
     string? Geography,
     string? RevenueRange,
     string? LinkedInUrl,
+
+    // New contact fields
+    string? CompanyWebsite,
+    string? Phone,
+    string? WhatsApp,
+    string EmailVerificationStatus,
+
+    // Enrichment
+    string EnrichmentStatus,
+
+    // Source / status
     string Source,
     string Status,
     string? Notes,
-    DateTime ImportedAt,
+
+    // Scoring
+    int JobTitleMatchScore,
+    int IndustryMatchScore,
+    int CompanySizeMatchScore,
+    int PainMatchScore,
+    int ActivitySignalsScore,
     int? IcpScore,
-    string? ScoreBreakdown);
+    string? ScoreBreakdown,
+
+    // Classification + qualification
+    string? Classification,
+    string QualificationStatus,
+    string? QualificationNotes,
+
+    // ICP metadata
+    Guid? IcpProfileId,
+    string? MatchedCriteria,
+    string? MismatchReasons,
+
+    // Handoff
+    string HandoffStatus,
+    string? HandoffTarget,
+    DateTime? HandoffAt,
+
+    DateTime ImportedAt);
