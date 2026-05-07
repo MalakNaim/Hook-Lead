@@ -21,7 +21,7 @@ export interface PagedResult<T> {
 
 // ── Leads ─────────────────────────────────────────────────────────────────────
 
-export type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Disqualified';
+export type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Disqualified' | 'Unsubscribed';
 export type EnrichmentStatus = 'Enriched' | 'Partial' | 'Failed' | 'Pending';
 export type LeadClassification = 'Hot' | 'Warm' | 'Cold' | 'Reject';
 

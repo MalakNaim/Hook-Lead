@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { DUMMY_LEADS, DUMMY_OUTREACH } from '@/lib/dummy-data';
+import { getLeadById } from '@/services/leadsService';
 import { ScoreRing, getScoreColor } from '@/components/ui/ScoreRing';
-import { Badge, classificationVariant, enrichmentVariant } from '@/components/ui/Badge';
+import { Badge, classificationVariant, enrichmentVariant, statusVariant } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import type { OutreachMessage } from '@/types';
+import type { Lead, OutreachMessage } from '@/types';
 import { useLocale } from '@/lib/i18n';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -103,20 +104,17 @@ function OutreachTimeline({
 
   return (
     <div className="relative">
-      {/* Vertical line */}
       <div className="absolute left-3 top-3 bottom-3 w-px bg-slate-200" aria-hidden="true" />
-
       <div className="space-y-5">
         {messages.map((msg) => {
-          const isSent      = msg.status === 'Sent';
-          const isDraft     = msg.status === 'Draft';
+          const isSent  = msg.status === 'Sent';
+          const isDraft = msg.status === 'Draft';
           const displayDate = new Date(msg.sentAt ?? msg.createdAt).toLocaleDateString('en-US', {
             month: 'short', day: 'numeric', year: 'numeric',
           });
 
           return (
             <div key={msg.id} className="relative flex gap-4">
-              {/* Timeline dot */}
               <div
                 className={`relative z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ring-4 ring-white ${
                   isSent  ? 'bg-emerald-500' :
@@ -135,8 +133,6 @@ function OutreachTimeline({
                   </svg>
                 )}
               </div>
-
-              {/* Message card */}
               <div
                 className={`flex-1 min-w-0 rounded-xl border p-4 ${
                   isDraft ? 'border-amber-200 bg-amber-50/50' : 'border-slate-100 bg-white'
@@ -151,15 +147,12 @@ function OutreachTimeline({
                     {msg.status}
                   </Badge>
                 </div>
-
                 <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-slate-500">
                   {msg.body.split('\n').filter(Boolean)[1] ?? msg.body.slice(0, 120)}
                 </p>
-
                 <p className="mt-2 text-[10px] font-medium text-slate-400">
                   {isSent ? t('pages.leadDetail.sent') : t('pages.leadDetail.created')} · {displayDate}
                 </p>
-
                 {isDraft && (
                   <div className="mt-3 flex items-center gap-2 border-t border-amber-100 pt-3">
                     <button
@@ -248,7 +241,6 @@ function QualificationCard({
     <Card>
       <h3 className="mb-1 text-sm font-semibold text-slate-900">{t('pages.leadDetail.manualQualTitle')}</h3>
       <p className="mb-4 text-xs text-slate-500">{t('pages.leadDetail.manualQualDesc')}</p>
-
       <div className="space-y-2">
         {QUAL_OPTIONS.map((opt) => {
           const isActive = value === opt.id;
@@ -269,21 +261,13 @@ function QualificationCard({
                   {opt.icon}
                 </span>
                 <div className="min-w-0">
-                  <p
-                    className={`text-xs font-semibold ${
-                      isActive ? QUAL_COLORS[opt.id] : 'text-slate-700'
-                    }`}
-                  >
+                  <p className={`text-xs font-semibold ${isActive ? QUAL_COLORS[opt.id] : 'text-slate-700'}`}>
                     {opt.label}
                   </p>
                   <p className="text-[11px] text-slate-400">{opt.description}</p>
                 </div>
                 {isActive && (
-                  <svg
-                    className={`ml-auto h-3.5 w-3.5 shrink-0 ${QUAL_COLORS[opt.id]}`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
+                  <svg className={`ml-auto h-3.5 w-3.5 shrink-0 ${QUAL_COLORS[opt.id]}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 )}
@@ -292,7 +276,6 @@ function QualificationCard({
           );
         })}
       </div>
-
       {value && (
         <p className={`mt-3 text-center text-xs font-medium ${QUAL_COLORS[value]}`}>
           {value === 'qualified'     && t('pages.leadDetail.markedAsQualified')}
@@ -321,7 +304,45 @@ function Toast({ message, onDone }: { message: string; onDone: () => void }) {
   );
 }
 
-// ── Icons (inline, reused) ─────────────────────────────────────────────────────
+// ── Loading skeleton ───────────────────────────────────────────────────────────
+
+function LeadDetailSkeleton() {
+  return (
+    <div className="max-w-5xl space-y-6 animate-pulse">
+      <div className="h-4 w-24 rounded bg-slate-100" />
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="h-1.5 w-full bg-slate-100" />
+        <div className="p-6 space-y-4">
+          <div className="flex gap-5">
+            <div className="h-16 w-16 rounded-2xl bg-slate-100" />
+            <div className="flex-1 space-y-2 pt-1">
+              <div className="h-5 w-40 rounded bg-slate-100" />
+              <div className="h-3.5 w-56 rounded bg-slate-100" />
+              <div className="h-3 w-28 rounded bg-slate-100" />
+            </div>
+            <div className="h-16 w-16 rounded-full bg-slate-100" />
+          </div>
+          <div className="h-px bg-slate-100" />
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => <div key={i} className="h-10 rounded bg-slate-100" />)}
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="space-y-4 md:col-span-2">
+          <div className="h-48 rounded-xl bg-slate-100" />
+          <div className="h-32 rounded-xl bg-slate-100" />
+        </div>
+        <div className="space-y-4">
+          <div className="h-40 rounded-xl bg-slate-100" />
+          <div className="h-32 rounded-xl bg-slate-100" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Icons ──────────────────────────────────────────────────────────────────────
 
 function IconEmail() {
   return (
@@ -365,19 +386,51 @@ export default function LeadDetailPage() {
   const { leadId } = useParams<{ leadId: string }>();
   const { t } = useLocale();
 
-  const lead = DUMMY_LEADS.find((l) => l.id === leadId);
+  const [lead, setLead]             = useState<Lead | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [isFallback, setIsFallback] = useState(false);
 
-  const [messages, setMessages] = useState<OutreachMessage[]>(
-    () => DUMMY_OUTREACH.filter((o) => o.leadId === leadId)
-  );
+  const [messages, setMessages]     = useState<OutreachMessage[]>([]);
   const [generating, setGenerating] = useState(false);
-  const [qualification, setQualification] = useState<QualStatus | null>(() => {
-    if (!lead) return null;
-    if (lead.status === 'Qualified')    return 'qualified';
-    if (lead.status === 'Disqualified') return 'not_qualified';
-    return null;
-  });
-  const [toast, setToast] = useState<string | null>(null);
+  const [qualification, setQualification] = useState<QualStatus | null>(null);
+  const [toast, setToast]           = useState<string | null>(null);
+
+  // ── Fetch lead ─────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setIsFallback(false);
+
+    getLeadById(leadId)
+      .then((data) => {
+        if (cancelled) return;
+        setLead(data);
+        setMessages(DUMMY_OUTREACH.filter((o) => o.leadId === leadId));
+        if (data.status === 'Qualified')    setQualification('qualified');
+        else if (data.status === 'Disqualified') setQualification('not_qualified');
+        else setQualification(null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        const dummy = DUMMY_LEADS.find((l) => l.id === leadId) as Lead | undefined;
+        setLead(dummy ?? null);
+        setMessages(DUMMY_OUTREACH.filter((o) => o.leadId === leadId));
+        if (dummy) {
+          if (dummy.status === 'Qualified')    setQualification('qualified');
+          else if (dummy.status === 'Disqualified') setQualification('not_qualified');
+          else setQualification(null);
+        }
+        setIsFallback(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [leadId]);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   function showToast(msg: string) {
     setToast(msg);
@@ -425,7 +478,13 @@ export default function LeadDetailPage() {
     showToast(labels[s]);
   }
 
-  // ── 404 state ──────────────────────────────────────────────────────────────
+  // ── Loading ────────────────────────────────────────────────────────────────
+
+  if (loading) {
+    return <LeadDetailSkeleton />;
+  }
+
+  // ── 404 ────────────────────────────────────────────────────────────────────
 
   if (!lead) {
     return (
@@ -466,13 +525,21 @@ export default function LeadDetailPage() {
         </Link>
       </nav>
 
+      {/* ── Fallback banner ── */}
+      {isFallback && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
+          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          {t('pages.leadDetail.errorFallback')}
+        </div>
+      )}
+
       {/* ── Profile Hero Card ── */}
       <Card padding={false} className="overflow-hidden">
-        {/* Score-colour top bar */}
         <div className="h-1.5 w-full" style={{ backgroundColor: scoreColor }} />
 
         <div className="p-6">
-          {/* Top row: avatar / name / score ring */}
           <div className="flex flex-wrap items-start gap-5">
             {/* Avatar */}
             <div
@@ -483,10 +550,11 @@ export default function LeadDetailPage() {
               {initials}
             </div>
 
-            {/* Name + title + location */}
+            {/* Name + title + badges */}
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-xl font-bold text-slate-900">{fullName}</h1>
+                <Badge variant={statusVariant(lead.status)}>{lead.status}</Badge>
                 {lead.classification && (
                   <Badge variant={classificationVariant(lead.classification)}>
                     {lead.classification}
@@ -626,10 +694,10 @@ export default function LeadDetailPage() {
         </div>
       </Card>
 
-      {/* ── Body — two-column grid ── */}
+      {/* ── Body ── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
-        {/* ── Main column (2/3) ── */}
+        {/* Main column */}
         <div className="space-y-4 md:col-span-2">
 
           {/* Score Breakdown */}
@@ -644,9 +712,7 @@ export default function LeadDetailPage() {
                   <p className="text-2xl font-bold tabular-nums" style={{ color: scoreColor }}>
                     {lead.icpScore}
                   </p>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    / 100
-                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">/ 100</p>
                 </div>
               )}
             </div>
@@ -658,15 +724,12 @@ export default function LeadDetailPage() {
                 <BreakdownBar label={t('pages.leadDetail.companySizeMatch')} value={lead.scoreBreakdown.companySizeMatch} max={15} />
                 <BreakdownBar label={t('pages.leadDetail.painMatch')}        value={lead.scoreBreakdown.painMatch}        max={20} />
                 <BreakdownBar label={t('pages.leadDetail.activitySignals')}  value={lead.scoreBreakdown.activitySignals}  max={10} />
-
                 <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                   <span className="text-xs font-semibold text-slate-500">{t('pages.leadDetail.totalScore')}</span>
                   <span className="text-base font-bold tabular-nums" style={{ color: scoreColor }}>
                     {lead.scoreBreakdown.total} / 100
                   </span>
                 </div>
-
-                {/* Score legend */}
                 <div className="grid grid-cols-3 gap-2 pt-1">
                   {[
                     { label: t('pages.leadDetail.legendHighFit'), range: '70–100', cls: 'bg-emerald-50 text-emerald-700' },
@@ -719,13 +782,11 @@ export default function LeadDetailPage() {
           </Card>
         </div>
 
-        {/* ── Sidebar (1/3) ── */}
+        {/* Sidebar */}
         <div className="space-y-4">
 
-          {/* Manual Qualification */}
           <QualificationCard value={qualification} onChange={handleQualify} />
 
-          {/* Company Info */}
           {(lead.industry || lead.companySize || lead.revenueRange) && (
             <Card>
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -768,7 +829,6 @@ export default function LeadDetailPage() {
             </Card>
           )}
 
-          {/* Notes */}
           {lead.notes && (
             <Card>
               <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -782,7 +842,6 @@ export default function LeadDetailPage() {
             </Card>
           )}
 
-          {/* Import meta */}
           <Card>
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
               {t('pages.leadDetail.sectionLeadInfo')}
@@ -815,7 +874,6 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      {/* ── Toast ── */}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </div>
   );

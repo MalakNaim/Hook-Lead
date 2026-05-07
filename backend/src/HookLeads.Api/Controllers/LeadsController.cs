@@ -1,5 +1,6 @@
 using FluentValidation;
 using HookLeads.Application.Features.Leads.AddLeadNote;
+using HookLeads.Application.Features.Leads.CreateLead;
 using HookLeads.Application.Features.Leads.DeleteLead;
 using HookLeads.Application.Features.Leads.GetLeadById;
 using HookLeads.Application.Features.Leads.GetLeads;
@@ -15,6 +16,18 @@ namespace HookLeads.Api.Controllers;
 [Authorize]
 public class LeadsController : ControllerBase
 {
+    [HttpPost]
+    public async Task<IActionResult> CreateLead(
+        [FromBody] CreateLeadCommand command,
+        [FromServices] CreateLeadCommandHandler handler,
+        [FromServices] IValidator<CreateLeadCommand> validator,
+        CancellationToken cancellationToken)
+    {
+        await validator.ValidateAndThrowAsync(command, cancellationToken);
+        var result = await handler.Handle(command, cancellationToken);
+        return CreatedAtAction(nameof(GetLeadById), new { id = result.Id }, result);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetLeads(
         [FromServices] GetLeadsQueryHandler handler,
