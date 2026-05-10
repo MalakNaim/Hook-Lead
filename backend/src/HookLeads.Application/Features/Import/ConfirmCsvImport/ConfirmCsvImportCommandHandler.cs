@@ -32,7 +32,6 @@ public class ConfirmCsvImportCommandHandler
             ?? throw new AppException("Workspace context is required.", 401);
 
         var activeProfile = await _context.IcpProfiles
-            .Include(p => p.Criteria)
             .FirstOrDefaultAsync(p => p.IsActive, cancellationToken);
 
         var existingEmails = (await _context.Leads
@@ -73,12 +72,8 @@ public class ConfirmCsvImportCommandHandler
                 ImportedAt = now
             };
 
-            if (activeProfile != null && activeProfile.Criteria.Any())
-            {
-                var (score, breakdown) = _scoringService.CalculateScore(lead, activeProfile);
-                lead.IcpScore = score;
-                lead.ScoreBreakdown = breakdown;
-            }
+            if (activeProfile != null)
+                _scoringService.ScoreLead(lead, activeProfile);
 
             _context.Leads.Add(lead);
             existingEmails.Add(email);

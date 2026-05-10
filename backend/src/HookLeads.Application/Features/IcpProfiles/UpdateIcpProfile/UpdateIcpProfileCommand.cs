@@ -1,11 +1,7 @@
-namespace HookLeads.Application.Common.Models;
+namespace HookLeads.Application.Features.IcpProfiles.UpdateIcpProfile;
 
-public record IcpProfileResult(
-    Guid Id,
+public record UpdateIcpProfileCommand(
     string Name,
-    bool IsActive,
-    DateTime UpdatedAt,
-    List<IcpCriterionResult> Criteria,
     List<string> Industries,
     List<string> JobTitles,
     int CompanySizeMin,

@@ -1,4 +1,5 @@
 using HookLeads.Application.Common.Exceptions;
+using HookLeads.Application.Common.Extensions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
@@ -49,10 +50,6 @@ public class UpdateIcpProfileCommandHandler
         if (wasActive != profile.IsActive)
             await _scoringService.RescoreWorkspaceLeadsAsync(cancellationToken);
 
-        var criteria = profile.Criteria
-            .Select(c => new IcpCriterionResult(c.Id, c.CriterionType.ToString(), c.Value, c.Weight))
-            .ToList();
-
-        return new IcpProfileResult(profile.Id, profile.Name, profile.IsActive, profile.UpdatedAt, criteria);
+        return profile.ToIcpProfileResult();
     }
 }

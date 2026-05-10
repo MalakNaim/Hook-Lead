@@ -92,6 +92,7 @@ try
     builder.Services.AddSwaggerGen(options =>
     {
         options.SwaggerDoc("v1", new OpenApiInfo { Title = "Hook Leads API", Version = "v1" });
+        options.CustomSchemaIds(type => type.FullName?.Replace("+", ".") ?? type.Name);
 
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {

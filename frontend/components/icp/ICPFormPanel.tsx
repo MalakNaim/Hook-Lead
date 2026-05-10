@@ -239,7 +239,7 @@ interface ICPFormPanelProps {
   isOpen: boolean;
   mode?: PanelMode;
   onClose: () => void;
-  onSave: (profile: ICPProfile) => void;
+  onSave: (profile: ICPProfile) => Promise<void> | void;
   onEditRequest?: () => void;
 }
 
@@ -259,11 +259,13 @@ export function ICPFormPanel({
   const [form, setForm] = useState<ICPProfile>(freshProfile);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
     setForm(profile ?? freshProfile());
     setErrors({});
+    setApiError(null);
   }, [profile, isOpen]);
 
   function validate(): boolean {
@@ -279,13 +281,17 @@ export function ICPFormPanel({
     return Object.keys(e).length === 0;
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!validate()) return;
     setSaving(true);
-    setTimeout(() => {
-      onSave({ ...form, updatedAt: new Date().toISOString() });
+    setApiError(null);
+    try {
+      await onSave({ ...form, updatedAt: new Date().toISOString() });
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
       setSaving(false);
-    }, 600);
+    }
   }
 
   function set<K extends keyof ICPProfile>(key: K, value: ICPProfile[K]) {
@@ -512,8 +518,10 @@ export function ICPFormPanel({
                 {t('common.cancel')}
               </button>
               <div className="flex items-center gap-3">
-                {Object.keys(errors).length > 0 && (
-                  <p className="text-xs text-red-500">{t('pages.icpPanel.errorFixAbove')}</p>
+                {(Object.keys(errors).length > 0 || apiError) && (
+                  <p className="text-xs text-red-500">
+                    {apiError ?? t('pages.icpPanel.errorFixAbove')}
+                  </p>
                 )}
                 <Button onClick={handleSave} loading={saving} size="md">
                   {saving

@@ -1,4 +1,5 @@
 using HookLeads.Application.Common.Exceptions;
+using HookLeads.Application.Common.Extensions;
 using HookLeads.Application.Common.Interfaces;
 using HookLeads.Application.Common.Models;
 using HookLeads.Domain.Entities;
@@ -30,7 +31,6 @@ public class CreateIcpProfileCommandHandler
 
         if (command.IsActive)
         {
-            // Enforce one active ICP per workspace — deactivate any currently active profiles.
             var activeProfiles = await _context.IcpProfiles
                 .Where(p => p.IsActive)
                 .ToListAsync(cancellationToken);
@@ -56,6 +56,6 @@ public class CreateIcpProfileCommandHandler
                 "ICP profile '{Name}' ({Id}) activated for workspace {WorkspaceId}.",
                 profile.Name, profile.Id, workspaceId);
 
-        return new IcpProfileResult(profile.Id, profile.Name, profile.IsActive, profile.UpdatedAt, new List<IcpCriterionResult>());
+        return profile.ToIcpProfileResult();
     }
 }

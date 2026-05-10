@@ -4,6 +4,6 @@ namespace HookLeads.Application.Common.Interfaces;
 
 public interface ILeadScoringService
 {
-    (int score, string breakdown) CalculateScore(Lead lead, IcpProfile profile);
+    void ScoreLead(Lead lead, IcpProfile profile);
     Task RescoreWorkspaceLeadsAsync(CancellationToken cancellationToken = default);
 }

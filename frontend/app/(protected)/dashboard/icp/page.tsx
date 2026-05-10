@@ -1,27 +1,175 @@
 'use client';
 
-import { useState } from 'react';
-import { DUMMY_ICP_PROFILES } from '@/lib/dummy-data';
+import { useState, useEffect, useCallback } from 'react';
 import type { ICPProfile } from '@/types';
-import { ICPProfileCard } from '@/components/icp/ICPProfileCard';
 import { ICPFormPanel, type PanelMode } from '@/components/icp/ICPFormPanel';
 import { useLocale } from '@/lib/i18n';
+import {
+  getCurrentIcpProfile,
+  createIcpProfile,
+  updateIcpProfile,
+} from '@/services/icpProfilesService';
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
 
-function Toast({ message }: { message: string }) {
+function Toast({ message, type = 'success' }: { message: string; type?: 'success' | 'error' }) {
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-xl">
-      <svg
-        className="h-4 w-4 shrink-0 text-emerald-400"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-      </svg>
+    <div
+      className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm text-white shadow-xl ${
+        type === 'error' ? 'bg-red-600' : 'bg-slate-900'
+      }`}
+    >
+      {type === 'success' ? (
+        <svg className="h-4 w-4 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      ) : (
+        <svg className="h-4 w-4 shrink-0 text-red-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      )}
       {message}
+    </div>
+  );
+}
+
+// ── Profile Summary Card ───────────────────────────────────────────────────────
+
+function TagPill({ text, color = 'bg-indigo-50 text-indigo-700' }: { text: string; color?: string }) {
+  return <span className={`px-2 py-0.5 rounded text-xs font-medium ${color}`}>{text}</span>;
+}
+
+function ProfileSummaryCard({
+  profile,
+  onView,
+  onEdit,
+}: {
+  profile: ICPProfile;
+  onView: (p: ICPProfile) => void;
+  onEdit: (p: ICPProfile) => void;
+}) {
+  const { t } = useLocale();
+  const updatedDate = new Date(profile.updatedAt).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  });
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-slate-900">{profile.name}</h2>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 text-indigo-700 uppercase tracking-wide">
+              <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {t('pages.icp.active')}
+            </span>
+          </div>
+          <p className="mt-0.5 text-xs text-slate-400">
+            {t('pages.icp.lastUpdated')} {updatedDate}
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={() => onView(profile)}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+          >
+            {t('pages.icp.viewBtn')}
+          </button>
+          <button
+            onClick={() => onEdit(profile)}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            {t('common.edit')}
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div>
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            {t('pages.icp.industries')}
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {profile.industries.length > 0
+              ? profile.industries.slice(0, 2).map((v) => <TagPill key={v} text={v} />)
+              : <span className="text-xs text-slate-400 italic">{t('common.none')}</span>}
+            {profile.industries.length > 2 && (
+              <TagPill text={`+${profile.industries.length - 2}`} color="bg-slate-100 text-slate-500" />
+            )}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            {t('pages.icp.jobTitles')}
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {profile.jobTitles.length > 0
+              ? profile.jobTitles.slice(0, 2).map((v) => <TagPill key={v} text={v} color="bg-slate-100 text-slate-600" />)
+              : <span className="text-xs text-slate-400 italic">{t('common.none')}</span>}
+            {profile.jobTitles.length > 2 && (
+              <TagPill text={`+${profile.jobTitles.length - 2}`} color="bg-slate-100 text-slate-500" />
+            )}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            {t('pages.icp.companySize')}
+          </p>
+          {profile.companySizeMin || profile.companySizeMax ? (
+            <p className="text-xs font-semibold text-slate-700">
+              {profile.companySizeMin.toLocaleString()}–{profile.companySizeMax.toLocaleString()}
+              <span className="text-slate-400 font-normal"> {t('pages.icpPanel.emp')}</span>
+            </p>
+          ) : (
+            <span className="text-xs text-slate-400 italic">{t('common.none')}</span>
+          )}
+        </div>
+
+        <div>
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            {t('pages.icp.geographies')}
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {profile.locations.length > 0
+              ? profile.locations.slice(0, 2).map((v) => <TagPill key={v} text={v} color="bg-slate-100 text-slate-600" />)
+              : <span className="text-xs text-slate-400 italic">{t('common.none')}</span>}
+            {profile.locations.length > 2 && (
+              <TagPill text={`+${profile.locations.length - 2}`} color="bg-slate-100 text-slate-500" />
+            )}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            {t('pages.icpPanel.labelDecisionMaker')}
+          </p>
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+            profile.decisionMaker ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+          }`}>
+            {profile.decisionMaker ? t('pages.icpPanel.dmRequired') : t('pages.icpPanel.dmNotRequired')}
+          </span>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            {t('pages.icpCard.budgetPerMonth')}
+          </p>
+          {profile.budgetMin || profile.budgetMax ? (
+            <p className="text-xs font-semibold text-slate-700">
+              ${profile.budgetMin.toLocaleString()}–${profile.budgetMax.toLocaleString()}
+            </p>
+          ) : (
+            <span className="text-xs text-slate-400 italic">{t('common.none')}</span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -68,16 +216,11 @@ function ICPQualityChecklist({ profile }: { profile: ICPProfile }) {
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
           <div>
@@ -91,15 +234,10 @@ function ICPQualityChecklist({ profile }: { profile: ICPProfile }) {
         </div>
       </div>
 
-      {/* Progress bar */}
       <div className="mb-4 w-full bg-slate-100 rounded-full h-1.5">
-        <div
-          className={`h-1.5 rounded-full transition-all duration-500 ${barColor}`}
-          style={{ width: `${pct}%` }}
-        />
+        <div className={`h-1.5 rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${pct}%` }} />
       </div>
 
-      {/* Checklist items */}
       <div className="space-y-2">
         {checks.map((item) => (
           <div key={item.label} className="flex items-center gap-2.5">
@@ -126,6 +264,29 @@ function ICPQualityChecklist({ profile }: { profile: ICPProfile }) {
   );
 }
 
+// ── Loading skeleton ───────────────────────────────────────────────────────────
+
+function PageSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2">
+          <div className="h-6 w-48 rounded bg-slate-200" />
+          <div className="h-4 w-80 rounded bg-slate-100" />
+        </div>
+        <div className="h-9 w-32 rounded-lg bg-slate-200 shrink-0" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 h-40 rounded-xl bg-slate-100" />
+        <div className="h-40 rounded-xl bg-slate-100" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="h-52 rounded-xl bg-slate-100" />
+      </div>
+    </div>
+  );
+}
+
 // ── Empty State ────────────────────────────────────────────────────────────────
 
 function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
@@ -145,13 +306,7 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-white py-16 text-center">
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50">
-        <svg
-          className="h-7 w-7 text-indigo-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={1.5}
-        >
+        <svg className="h-7 w-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <circle cx="12" cy="12" r="9" />
           <circle cx="12" cy="12" r="4" />
           <path strokeLinecap="round" d="M12 3v2M12 19v2M3 12h2M19 12h2" />
@@ -169,7 +324,6 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
         {t('pages.icp.createFirstProfile')}
       </button>
 
-      {/* Checklist preview */}
       <div className="mt-8 w-full max-w-sm px-4">
         <p className="mb-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
           {t('pages.icp.completeProfileIncludes')}
@@ -177,18 +331,8 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
         <div className="grid grid-cols-2 gap-1.5 text-left">
           {checklistPreview.map((label) => (
             <div key={label} className="flex items-center gap-2">
-              <svg
-                className="w-3.5 h-3.5 shrink-0 text-slate-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+              <svg className="w-3.5 h-3.5 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="text-xs text-slate-500">{label}</span>
             </div>
@@ -203,17 +347,33 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
 
 export default function ICPPage() {
   const { t } = useLocale();
-  const [profiles, setProfiles] = useState<ICPProfile[]>(DUMMY_ICP_PROFILES);
-  const [activeId, setActiveId] = useState<string>('icp-1');
+  const [profile, setProfile] = useState<ICPProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelMode, setPanelMode] = useState<PanelMode>('create');
   const [editingProfile, setEditingProfile] = useState<ICPProfile | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const activeProfile = profiles.find((p) => p.id === activeId);
+  const loadProfile = useCallback(async () => {
+    try {
+      setLoading(true);
+      setLoadError(null);
+      const p = await getCurrentIcpProfile();
+      setProfile(p);
+    } catch {
+      setLoadError(t('pages.icp.loadError'));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
 
-  function showToast(msg: string) {
-    setToast(msg);
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  function showToast(message: string, type: 'success' | 'error' = 'success') {
+    setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   }
 
@@ -223,14 +383,14 @@ export default function ICPPage() {
     setPanelOpen(true);
   }
 
-  function openEdit(profile: ICPProfile) {
-    setEditingProfile(profile);
+  function openEdit(p: ICPProfile) {
+    setEditingProfile(p);
     setPanelMode('edit');
     setPanelOpen(true);
   }
 
-  function openView(profile: ICPProfile) {
-    setEditingProfile(profile);
+  function openView(p: ICPProfile) {
+    setEditingProfile(p);
     setPanelMode('view');
     setPanelOpen(true);
   }
@@ -240,46 +400,49 @@ export default function ICPPage() {
     setEditingProfile(null);
   }
 
-  function handleSave(saved: ICPProfile) {
-    const isNew = !profiles.find((p) => p.id === saved.id);
-    setProfiles((prev) =>
-      isNew ? [...prev, saved] : prev.map((p) => (p.id === saved.id ? saved : p))
-    );
-    closePanel();
-    const toastKey = isNew ? 'pages.icp.toastCreated' : 'pages.icp.toastUpdated';
-    showToast(t(toastKey).replace('{name}', saved.name));
-  }
-
-  function handleDelete(id: string) {
-    setProfiles((prev) => prev.filter((p) => p.id !== id));
-    if (activeId === id) {
-      const remaining = profiles.filter((p) => p.id !== id);
-      setActiveId(remaining[0]?.id ?? '');
-    }
-    showToast(t('pages.icp.toastDeleted'));
-  }
-
-  function handleDuplicate(profile: ICPProfile) {
-    const copy: ICPProfile = {
-      ...profile,
-      id: `icp-${Date.now()}`,
-      name: `Copy of ${profile.name}`,
-      updatedAt: new Date().toISOString(),
+  async function handleSave(formData: ICPProfile) {
+    const payload = {
+      name: formData.name,
+      industries: formData.industries,
+      jobTitles: formData.jobTitles,
+      companySizeMin: formData.companySizeMin,
+      companySizeMax: formData.companySizeMax,
+      locations: formData.locations,
+      decisionMaker: formData.decisionMaker,
+      painPoints: formData.painPoints,
+      budgetMin: formData.budgetMin,
+      budgetMax: formData.budgetMax,
+      buyingTriggers: formData.buyingTriggers,
     };
-    setProfiles((prev) => [...prev, copy]);
-    showToast(t('pages.icp.toastDuplicate').replace('{name}', copy.name));
+
+    let saved: ICPProfile;
+    if (profile?.id) {
+      saved = await updateIcpProfile(profile.id, payload);
+      showToast(t('pages.icp.toastUpdated').replace('{name}', saved.name));
+    } else {
+      saved = await createIcpProfile(payload);
+      showToast(t('pages.icp.toastCreated').replace('{name}', saved.name));
+    }
+
+    setProfile(saved);
+    closePanel();
   }
 
-  function handleSetActive(id: string) {
-    setActiveId(id);
-    const name = profiles.find((p) => p.id === id)?.name;
-    if (name) showToast(t('pages.icp.toastSetActive').replace('{name}', name));
-  }
+  if (loading) return <PageSkeleton />;
 
-  const profileCountText =
-    profiles.length === 1
-      ? t('pages.icp.profileCount').replace('{count}', '1')
-      : t('pages.icp.profilesCount').replace('{count}', String(profiles.length));
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-xl border border-red-200 bg-red-50 py-16 text-center">
+        <p className="text-sm font-medium text-red-600">{loadError}</p>
+        <button
+          onClick={loadProfile}
+          className="mt-4 text-sm font-medium text-red-500 underline hover:text-red-700"
+        >
+          {t('common.retry')}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -293,60 +456,58 @@ export default function ICPPage() {
             </p>
           </div>
           <button
-            onClick={openCreate}
+            onClick={profile ? () => openEdit(profile) : openCreate}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            {t('pages.icp.newProfile')}
+            {profile ? (
+              <>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                {t('pages.icp.editBtn').replace(' →', '')}
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                {t('pages.icp.newProfile')}
+              </>
+            )}
           </button>
         </div>
 
-        {profiles.length > 0 && (
+        {profile ? (
           <>
             {/* ── Active profile banner + quality checklist ── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Left col: active banner + how-it-powers tiles */}
               <div className="lg:col-span-2 flex flex-col gap-3">
-                {activeProfile ? (
-                  <div className="flex items-center gap-2.5 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3.5">
-                    <svg className="h-4 w-4 shrink-0 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <p className="flex-1 text-sm text-slate-600">
-                      {t('pages.icp.activeProfileLabel')}{' '}
-                      <span className="font-semibold text-indigo-700">{activeProfile.name}</span>
-                      {' '}{t('pages.icp.allLeadsScoredAgainst')}
-                    </p>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => openView(activeProfile)}
-                        className="text-xs font-medium text-indigo-500 transition-colors hover:text-indigo-700"
-                      >
-                        {t('pages.icp.viewBtn')}
-                      </button>
-                      <span className="text-indigo-200">|</span>
-                      <button
-                        onClick={() => openEdit(activeProfile)}
-                        className="text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-800"
-                      >
-                        {t('pages.icp.editBtn')}
-                      </button>
-                    </div>
+                <div className="flex items-center gap-2.5 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3.5">
+                  <svg className="h-4 w-4 shrink-0 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <p className="flex-1 text-sm text-slate-600">
+                    {t('pages.icp.activeProfileLabel')}{' '}
+                    <span className="font-semibold text-indigo-700">{profile.name}</span>
+                    {' '}{t('pages.icp.allLeadsScoredAgainst')}
+                  </p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => openView(profile)}
+                      className="text-xs font-medium text-indigo-500 transition-colors hover:text-indigo-700"
+                    >
+                      {t('pages.icp.viewBtn')}
+                    </button>
+                    <span className="text-indigo-200">|</span>
+                    <button
+                      onClick={() => openEdit(profile)}
+                      className="text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-800"
+                    >
+                      {t('pages.icp.editBtn')}
+                    </button>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-700">
-                    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    {t('pages.icp.noActiveProfile')}
-                  </div>
-                )}
+                </div>
 
                 {/* How ICP powers the platform */}
                 <div className="grid grid-cols-3 gap-3">
@@ -379,10 +540,7 @@ export default function ICPPage() {
                       sub: t('pages.icp.outreachDesc'),
                     },
                   ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="flex items-start gap-2.5 rounded-lg border border-slate-100 bg-white px-3 py-3 shadow-sm"
-                    >
+                    <div key={item.label} className="flex items-start gap-2.5 rounded-lg border border-slate-100 bg-white px-3 py-3 shadow-sm">
                       <div className="mt-0.5 w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 shrink-0">
                         {item.icon}
                       </div>
@@ -397,50 +555,16 @@ export default function ICPPage() {
 
               {/* Right col: quality checklist */}
               <div>
-                {activeProfile ? (
-                  <ICPQualityChecklist profile={activeProfile} />
-                ) : (
-                  <div className="h-full rounded-xl border border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center p-5 text-center">
-                    <svg className="w-8 h-8 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                    <p className="text-xs text-slate-400">
-                      {t('pages.icp.setActiveQualityHint')}
-                    </p>
-                  </div>
-                )}
+                <ICPQualityChecklist profile={profile} />
               </div>
             </div>
 
-            {/* ── Profile count ── */}
-            <p className="text-xs text-slate-400">
-              {profileCountText} — {t('pages.icp.clickToViewEdit')}
-            </p>
-
-            {/* ── Profile grid ── */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {profiles.map((profile) => (
-                <ICPProfileCard
-                  key={profile.id}
-                  profile={profile}
-                  isActive={profile.id === activeId}
-                  onView={openView}
-                  onEdit={openEdit}
-                  onDuplicate={handleDuplicate}
-                  onDelete={handleDelete}
-                  onSetActive={handleSetActive}
-                />
-              ))}
-            </div>
+            {/* ── Profile summary card ── */}
+            <ProfileSummaryCard profile={profile} onView={openView} onEdit={openEdit} />
           </>
+        ) : (
+          <EmptyState onCreateClick={openCreate} />
         )}
-
-        {/* ── Empty state ── */}
-        {profiles.length === 0 && <EmptyState onCreateClick={openCreate} />}
       </div>
 
       {/* ── Slide-over panel ── */}
@@ -458,7 +582,7 @@ export default function ICPPage() {
       />
 
       {/* ── Toast ── */}
-      {toast && <Toast message={toast} />}
+      {toast && <Toast message={toast.message} type={toast.type} />}
     </>
   );
 }

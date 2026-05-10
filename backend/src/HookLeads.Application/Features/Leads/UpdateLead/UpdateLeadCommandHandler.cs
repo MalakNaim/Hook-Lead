@@ -10,10 +10,14 @@ namespace HookLeads.Application.Features.Leads.UpdateLead;
 public class UpdateLeadCommandHandler
 {
     private readonly IApplicationDbContext _context;
+    private readonly ILeadScoringService _scoringService;
 
-    public UpdateLeadCommandHandler(IApplicationDbContext context)
+    public UpdateLeadCommandHandler(
+        IApplicationDbContext context,
+        ILeadScoringService scoringService)
     {
         _context = context;
+        _scoringService = scoringService;
     }
 
     public async Task<LeadResult> Handle(UpdateLeadCommand command, Guid leadId, CancellationToken cancellationToken = default)
@@ -70,6 +74,15 @@ public class UpdateLeadCommandHandler
             lead.HandoffTarget = command.HandoffTarget.Trim();
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        var activeProfile = await _context.IcpProfiles
+            .FirstOrDefaultAsync(p => p.IsActive, cancellationToken);
+
+        if (activeProfile != null)
+        {
+            _scoringService.ScoreLead(lead, activeProfile);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
 
         return lead.ToLeadResult();
     }

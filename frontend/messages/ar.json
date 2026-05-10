@@ -240,6 +240,7 @@
       "toastDeleted": "تم حذف الملف",
       "toastDuplicate": "تم إنشاء \"{name}\" كنسخة مكررة",
       "toastSetActive": "تم تعيين \"{name}\" كملف نشط",
+      "loadError": "فشل تحميل ملف ICP. يرجى المحاولة مرة أخرى.",
       "comingSoon": "قريباً",
       "active": "نشط",
       "lastUpdated": "آخر تحديث",

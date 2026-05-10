@@ -240,6 +240,7 @@
       "toastDeleted": "Profile deleted",
       "toastDuplicate": "\"{name}\" created as a duplicate",
       "toastSetActive": "\"{name}\" set as active profile",
+      "loadError": "Failed to load ICP profile. Please try again.",
       "comingSoon": "Coming soon",
       "active": "Active",
       "lastUpdated": "Last updated",
