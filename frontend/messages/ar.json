@@ -18,7 +18,8 @@
     "searchPlaceholder": "بحث…",
     "showingOf": "عرض {visible} من {total}",
     "updated": "تم التحديث {date}",
-    "joined": "انضم {date}"
+    "joined": "انضم {date}",
+    "retry": "إعادة المحاولة"
   },
   "auth": {
     "login": {
@@ -380,7 +381,7 @@
       "colStatus": "الحالة",
       "showingCount": "عرض {visible} من {total} عميل",
       "loading": "جارِ تحميل العملاء…",
-      "errorFallback": "تعذّر الاتصال بالخادم — عرض البيانات التجريبية",
+      "errorFallback": "تعذّر تحميل البيانات. يرجى المحاولة مجدداً.",
       "filterNew": "جديد",
       "filterQualified": "مؤهل",
       "filterDisqualified": "غير مؤهل",
@@ -503,7 +504,7 @@
       "notQualifiedToast": "تم تحديد العميل كغير مؤهل",
       "nurturingToast": "تمت إضافة العميل إلى الرعاية",
       "loading": "جارِ تحميل العميل…",
-      "errorFallback": "تعذّر الاتصال بالخادم — عرض البيانات التجريبية",
+      "errorFallback": "تعذّر تحميل البيانات. يرجى المحاولة مجدداً.",
       "statusCardTitle": "حالة العميل",
       "statusCardDesc": "تحديث حالة خط المبيعات لهذا العميل.",
       "statusNew": "جديد",
@@ -523,7 +524,7 @@
       "scoreHistoryEmpty": "لا يوجد سجل نقاط بعد",
       "scoreHistoryEmptyDesc": "سيظهر سجل النقاط هنا عند تشغيل التقييم التلقائي.",
       "sectionQualification": "التأهيل",
-      "qualificationStatusLabel": "الحالة",
+      "qualificationStatusLabel": "حالة التأهيل",
       "qualificationNotesLabel": "ملاحظات",
       "qualQualifiedLead": "عميل مؤهل",
       "qualNotQualified": "غير مؤهل",
@@ -536,6 +537,8 @@
       "emailVerVerified": "تم التحقق",
       "emailVerUnverified": "غير محقق",
       "sectionIcpMatch": "مطابقة ICP",
+      "icpProfileIdLabel": "معرّف ملف ICP",
+      "icpScoreLabel": "نقاط ICP",
       "matchedCriteriaLabel": "المعايير المطابقة",
       "mismatchReasonsLabel": "أسباب عدم المطابقة",
       "sectionHandoff": "التسليم",
