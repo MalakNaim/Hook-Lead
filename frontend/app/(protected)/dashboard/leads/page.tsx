@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { DUMMY_LEADS } from '@/lib/dummy-data';
 import { getLeads } from '@/services/leadsService';
 import type { LeadSummary, LeadStatus } from '@/types';
 import { ScoreRing } from '@/components/ui/ScoreRing';
@@ -131,7 +130,7 @@ export default function LeadsPage() {
   const [totalCount, setTotalCount]   = useState(0);
   const [page, setPage]               = useState(1);
   const [loading, setLoading]         = useState(true);
-  const [isFallback, setIsFallback]   = useState(false);
+  const [hasError, setHasError]       = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
   const [search, setSearch]           = useState('');
   const [sortBy, setSortBy]           = useState<SortKey>('score-desc');
@@ -140,7 +139,7 @@ export default function LeadsPage() {
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
-    setIsFallback(false);
+    setHasError(false);
     try {
       const result = await getLeads({
         page,
@@ -149,11 +148,11 @@ export default function LeadsPage() {
       });
       setLeads(result.items);
       setTotalCount(result.totalCount);
-    } catch {
-      const fallback = DUMMY_LEADS as unknown as LeadSummary[];
-      setLeads(fallback);
-      setTotalCount(fallback.length);
-      setIsFallback(true);
+    } catch (err) {
+      console.error('[LeadsPage] getLeads failed:', err);
+      setLeads([]);
+      setTotalCount(0);
+      setHasError(true);
     } finally {
       setLoading(false);
     }
@@ -169,28 +168,19 @@ export default function LeadsPage() {
   }
 
   function statusCount(f: StatusFilter): number | null {
-    if (isFallback) {
-      if (f === 'All') return leads.length;
-      return leads.filter((l) => l.status === f).length;
-    }
     if (f === statusFilter) return totalCount;
     return null;
   }
 
   const displayLeads = useMemo(() => {
     const q = search.toLowerCase().trim();
-    let source = leads;
-
-    if (isFallback && statusFilter !== 'All') {
-      source = leads.filter((l) => l.status === statusFilter);
-    }
 
     const filtered = q
-      ? source.filter((l) => {
+      ? leads.filter((l) => {
           const hay = `${l.firstName} ${l.lastName} ${l.email} ${l.company ?? ''} ${l.jobTitle ?? ''}`.toLowerCase();
           return hay.includes(q);
         })
-      : source;
+      : leads;
 
     return [...filtered].sort((a, b) => {
       switch (sortBy) {
@@ -203,7 +193,7 @@ export default function LeadsPage() {
         default: return 0;
       }
     });
-  }, [leads, search, sortBy, isFallback, statusFilter]);
+  }, [leads, search, sortBy]);
 
   const hasActiveFilters = search !== '' || statusFilter !== 'All';
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -242,13 +232,21 @@ export default function LeadsPage() {
         </Link>
       </div>
 
-      {/* ── Fallback banner ── */}
-      {isFallback && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
-          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          {t('pages.leads.errorFallback')}
+      {/* ── Error banner ── */}
+      {hasError && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-center gap-2">
+            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>{t('pages.leads.errorFallback')}</span>
+          </div>
+          <button
+            onClick={fetchLeads}
+            className="shrink-0 rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 transition-colors hover:bg-red-50"
+          >
+            {t('common.retry')}
+          </button>
         </div>
       )}
 

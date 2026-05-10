@@ -67,6 +67,9 @@ function LoginForm() {
     setLoading(true);
     try {
       const data = await login({ email: email.trim().toLowerCase(), password });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[login] response keys:', Object.keys(data));
+      }
       saveTokens(data.accessToken, data.refreshToken);
       router.replace(next);
     } catch (err) {

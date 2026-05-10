@@ -1,11 +1,25 @@
 const TOKEN_KEY = 'hl_access_token';
 const REFRESH_KEY = 'hl_refresh_token';
 
-export function saveTokens(accessToken: string, refreshToken: string): void {
+export function saveTokens(accessToken: string, refreshToken?: string): void {
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[auth] accessToken exists:', accessToken ? 'YES' : 'NO');
+  }
+
   localStorage.setItem(TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_KEY, refreshToken);
-  // Mirror in a cookie so middleware can read it for server-side redirects.
-  document.cookie = `hl_token=1; path=/; SameSite=Lax`;
+  if (refreshToken) {
+    localStorage.setItem(REFRESH_KEY, refreshToken);
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[auth] localStorage written: YES');
+  }
+
+  document.cookie = `hl_token=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[auth] cookie written: YES');
+  }
 }
 
 export function getAccessToken(): string | null {

@@ -51,10 +51,28 @@ try
     // ── CORS ──────────────────────────────────────────────────────────────────
     builder.Services.AddCors(options =>
     {
+        // Dev: allow any localhost port in the 3000–3010 range
+        options.AddPolicy("FrontendDev", policy =>
+            policy.WithOrigins(
+                      "http://localhost:3000",
+                      "http://localhost:3001",
+                      "http://localhost:3002",
+                      "http://localhost:3003",
+                      "http://localhost:3004",
+                      "http://localhost:3005",
+                      "http://localhost:3006",
+                      "http://localhost:3007",
+                      "http://localhost:3008",
+                      "http://localhost:3009",
+                      "http://localhost:3010")
+                  .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                  .WithHeaders("Content-Type", "Authorization"));
+
+        // Prod: lock down to the deployed frontend origin
         options.AddPolicy("Frontend", policy =>
-            policy.WithOrigins("http://localhost:3000")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod());
+            policy.WithOrigins("https://hookleads.app") // TODO: update with real production domain
+                  .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                  .WithHeaders("Content-Type", "Authorization"));
     });
 
     // ── HTTP context + Http-scoped identity services ───────────────────────────
@@ -105,7 +123,6 @@ try
     var app = builder.Build();
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();
-    app.UseCors("Frontend");
 
     if (app.Environment.IsDevelopment())
     {
@@ -113,8 +130,14 @@ try
         app.UseSwaggerUI();
     }
 
+    app.UseRouting();
+    app.UseCors(app.Environment.IsDevelopment() ? "FrontendDev" : "Frontend");
+
     app.UseSerilogRequestLogging();
-    app.UseHttpsRedirection();
+
+    if (!app.Environment.IsDevelopment())
+        app.UseHttpsRedirection();
+
     app.UseAuthentication();
     app.UseAuthorization();
     app.UseInfrastructure(app.Environment);

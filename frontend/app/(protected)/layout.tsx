@@ -181,10 +181,19 @@ export default function ProtectedLayout({
   const { t, dir } = useLocale();
   const isRtl = dir === 'rtl';
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Gates children rendering until the client-side auth check completes.
+  // Prevents pages from firing API calls before we know the token exists.
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
+      // hl_token cookie is present (middleware passed) but hl_access_token is
+      // missing from localStorage — state is out of sync. Clear everything so
+      // the middleware also redirects on the next request.
+      clearTokens();
       router.replace('/login');
+    } else {
+      setAuthReady(true);
     }
   }, [router]);
 
@@ -332,7 +341,11 @@ export default function ProtectedLayout({
         {/* Page content */}
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-6xl px-6 py-8">
-            {children}
+            {authReady ? children : (
+              <div className="flex h-32 items-center justify-center">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+              </div>
+            )}
           </div>
         </main>
       </div>

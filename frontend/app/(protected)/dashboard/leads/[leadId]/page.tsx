@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { DUMMY_LEADS, DUMMY_OUTREACH } from '@/lib/dummy-data';
 import { getLeadById, updateLeadStatus, addLeadNote } from '@/services/leadsService';
 import { ScoreRing, getScoreColor } from '@/components/ui/ScoreRing';
 import { Badge, classificationVariant, enrichmentVariant, statusVariant } from '@/components/ui/Badge';
@@ -87,12 +86,29 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+// ── Dash when empty ────────────────────────────────────────────────────────────
+
+function Dash() {
+  return <span className="text-sm text-slate-300">—</span>;
+}
+
 // ── Section Card ───────────────────────────────────────────────────────────────
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <Card>
-      <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</h3>
+      <div className="mb-4 flex items-center gap-2">
+        {icon && <span className="text-slate-400">{icon}</span>}
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</h3>
+      </div>
       <div className="space-y-3">{children}</div>
     </Card>
   );
@@ -126,10 +142,12 @@ function OutreachTimeline({
   messages,
   onMarkSent,
   onDiscard,
+  isRtl,
 }: {
   messages: OutreachMessage[];
   onMarkSent: (id: string) => void;
   onDiscard: (id: string) => void;
+  isRtl: boolean;
 }) {
   const { t } = useLocale();
 
@@ -149,7 +167,10 @@ function OutreachTimeline({
 
   return (
     <div className="relative">
-      <div className="absolute left-3 top-3 bottom-3 w-px bg-slate-200" aria-hidden="true" />
+      <div
+        className={`absolute ${isRtl ? 'right-3' : 'left-3'} top-3 bottom-3 w-px bg-slate-200`}
+        aria-hidden="true"
+      />
       <div className="space-y-5">
         {messages.map((msg) => {
           const isSent  = msg.status === 'Sent';
@@ -277,7 +298,6 @@ function StatusCard({
   error: string | null;
 }) {
   const { t } = useLocale();
-
   return (
     <Card>
       <h3 className="mb-1 text-sm font-semibold text-slate-900">{t('pages.leadDetail.statusCardTitle')}</h3>
@@ -339,7 +359,6 @@ function NotesCard({
   error: string | null;
 }) {
   const { t } = useLocale();
-
   return (
     <Card>
       <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -349,6 +368,9 @@ function NotesCard({
         <div className="mb-4 rounded-lg border border-amber-100 bg-amber-50 px-3.5 py-3">
           <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">{notes}</p>
         </div>
+      )}
+      {!notes && (
+        <p className="mb-3 text-sm text-slate-300">—</p>
       )}
       <div className="space-y-2">
         <textarea
@@ -376,10 +398,10 @@ function NotesCard({
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
 
-function Toast({ message, onDone }: { message: string; onDone: () => void }) {
+function Toast({ message }: { message: string }) {
   return (
     <div
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-xl animate-fade-in"
+      className="fixed bottom-6 end-6 z-50 flex items-center gap-2.5 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-xl"
       role="status"
       aria-live="polite"
     >
@@ -391,7 +413,7 @@ function Toast({ message, onDone }: { message: string; onDone: () => void }) {
   );
 }
 
-// ── Loading skeleton ───────────────────────────────────────────────────────────
+// ── Loading Skeleton ───────────────────────────────────────────────────────────
 
 function LeadDetailSkeleton() {
   return (
@@ -417,12 +439,10 @@ function LeadDetailSkeleton() {
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="space-y-4 md:col-span-2">
-          <div className="h-48 rounded-xl bg-slate-100" />
-          <div className="h-32 rounded-xl bg-slate-100" />
+          {[1, 2, 3, 4].map((i) => <div key={i} className="h-32 rounded-xl bg-slate-100" />)}
         </div>
         <div className="space-y-4">
-          <div className="h-40 rounded-xl bg-slate-100" />
-          <div className="h-32 rounded-xl bg-slate-100" />
+          {[1, 2, 3].map((i) => <div key={i} className="h-28 rounded-xl bg-slate-100" />)}
         </div>
       </div>
     </div>
@@ -471,66 +491,60 @@ function IconGlobe() {
 
 export default function LeadDetailPage() {
   const { leadId } = useParams<{ leadId: string }>();
-  const { t } = useLocale();
+  const { t, dir } = useLocale();
+  const isRtl = dir === 'rtl';
 
-  const [lead, setLead]             = useState<Lead | null>(null);
-  const [loading, setLoading]       = useState(true);
-  const [isFallback, setIsFallback] = useState(false);
+  const [lead, setLead]               = useState<Lead | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [hasError, setHasError]       = useState(false);
 
-  const [messages, setMessages]     = useState<OutreachMessage[]>([]);
-  const [generating, setGenerating] = useState(false);
-  const [toast, setToast]           = useState<string | null>(null);
+  const [messages, setMessages]       = useState<OutreachMessage[]>([]);
+  const [generating, setGenerating]   = useState(false);
+  const [toast, setToast]             = useState<string | null>(null);
 
   const [statusSaving, setStatusSaving] = useState(false);
   const [statusError, setStatusError]   = useState<string | null>(null);
 
-  const [noteText, setNoteText]     = useState('');
-  const [noteSaving, setNoteSaving] = useState(false);
-  const [noteError, setNoteError]   = useState<string | null>(null);
+  const [noteText, setNoteText]       = useState('');
+  const [noteSaving, setNoteSaving]   = useState(false);
+  const [noteError, setNoteError]     = useState<string | null>(null);
+
+  // ── Data fetching ──────────────────────────────────────────────────────────
 
   const fetchLead = useCallback(async () => {
+    setLoading(true);
+    setHasError(false);
     try {
       const data = await getLeadById(leadId);
       setLead(data);
-      setIsFallback(false);
-      setMessages(DUMMY_OUTREACH.filter((o) => o.leadId === leadId));
     } catch {
-      const dummy = DUMMY_LEADS.find((l) => l.id === leadId) as Lead | undefined;
-      setLead(dummy ?? null);
-      setMessages(DUMMY_OUTREACH.filter((o) => o.leadId === leadId));
-      setIsFallback(true);
+      setHasError(true);
+    } finally {
+      setLoading(false);
     }
   }, [leadId]);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setHasError(false);
 
     getLeadById(leadId)
-      .then((data) => {
-        if (cancelled) return;
-        setLead(data);
-        setIsFallback(false);
-        setMessages(DUMMY_OUTREACH.filter((o) => o.leadId === leadId));
-      })
-      .catch(() => {
-        if (cancelled) return;
-        const dummy = DUMMY_LEADS.find((l) => l.id === leadId) as Lead | undefined;
-        setLead(dummy ?? null);
-        setMessages(DUMMY_OUTREACH.filter((o) => o.leadId === leadId));
-        setIsFallback(true);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+      .then((data) => { if (!cancelled) { setLead(data); } })
+      .catch(() => { if (!cancelled) { setHasError(true); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
   }, [leadId]);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 3500);
   }
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
 
   async function handleStatusChange(status: 'New' | 'Qualified' | 'Disqualified' | 'Unsubscribed') {
     if (!lead || statusSaving || lead.status === status) return;
@@ -594,7 +608,31 @@ export default function LeadDetailPage() {
     showToast(t('pages.leadDetail.draftDiscarded'));
   }
 
+  // ── Loading / Error states ─────────────────────────────────────────────────
+
   if (loading) return <LeadDetailSkeleton />;
+
+  if (hasError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50">
+          <svg className="h-8 w-8 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h2 className="text-base font-semibold text-slate-700">{t('pages.leadDetail.errorFallback')}</h2>
+        <Link href="/dashboard/leads" className="mt-5 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-800">
+          {t('pages.leadDetail.backToLeadsLink')}
+        </Link>
+        <button
+          onClick={fetchLead}
+          className="mt-3 text-sm text-slate-500 transition-colors hover:text-slate-700"
+        >
+          {t('common.retry')}
+        </button>
+      </div>
+    );
+  }
 
   if (!lead) {
     return (
@@ -613,6 +651,8 @@ export default function LeadDetailPage() {
     );
   }
 
+  // ── Derived values ─────────────────────────────────────────────────────────
+
   const fullName   = `${lead.firstName} ${lead.lastName}`;
   const initials   = `${lead.firstName[0]}${lead.lastName[0]}`;
   const scoreColor = lead.icpScore !== null ? getScoreColor(lead.icpScore) : '#94a3b8';
@@ -627,11 +667,34 @@ export default function LeadDetailPage() {
     </span>
   ) : null;
 
-  // Compute derived score total from sub-scores if no legacy icpScore
   const subScoreTotal =
     lead.jobTitleMatchScore + lead.industryMatchScore +
     lead.companySizeMatchScore + lead.painMatchScore + lead.activitySignalsScore;
   const hasSubScores = subScoreTotal > 0;
+
+  const qualLabel =
+    lead.qualificationStatus === 'QualifiedLead' ? t('pages.leadDetail.qualQualifiedLead') :
+    lead.qualificationStatus === 'NotQualified'  ? t('pages.leadDetail.qualNotQualified') :
+    lead.qualificationStatus === 'Nurturing'     ? t('pages.leadDetail.qualNurturing') :
+    t('pages.leadDetail.qualUnknown');
+
+  const qualVariant: string =
+    lead.qualificationStatus === 'QualifiedLead' ? 'bg-emerald-100 text-emerald-700' :
+    lead.qualificationStatus === 'NotQualified'  ? 'bg-red-100 text-red-600' :
+    lead.qualificationStatus === 'Nurturing'     ? 'bg-amber-100 text-amber-700' :
+    'bg-slate-100 text-slate-500';
+
+  const handoffLabel =
+    lead.handoffStatus === 'Sent'  ? t('pages.leadDetail.handoffSent') :
+    lead.handoffStatus === 'Ready' ? t('pages.leadDetail.handoffReady') :
+    t('pages.leadDetail.handoffNotReady');
+
+  const handoffVariant: string =
+    lead.handoffStatus === 'Sent'  ? 'bg-emerald-100 text-emerald-700' :
+    lead.handoffStatus === 'Ready' ? 'bg-blue-100 text-blue-700' :
+    'bg-slate-100 text-slate-500';
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="max-w-5xl space-y-6">
@@ -642,30 +705,23 @@ export default function LeadDetailPage() {
           href="/dashboard/leads"
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg
+            className={`h-4 w-4 shrink-0 ${isRtl ? 'rotate-180' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
           {t('pages.leadDetail.backToLeads')}
         </Link>
       </nav>
 
-      {/* ── Fallback banner ── */}
-      {isFallback && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
-          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          {t('pages.leadDetail.errorFallback')}
-        </div>
-      )}
-
-      {/* ── Profile Hero Card ── */}
+      {/* ── 1. Header Summary Card ── */}
       <Card padding={false} className="overflow-hidden">
         <div className="h-1.5 w-full" style={{ backgroundColor: scoreColor }} />
 
         <div className="p-6">
+          {/* Avatar + name row */}
           <div className="flex flex-wrap items-start gap-5">
-            {/* Avatar */}
             <div
               className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-xl font-bold text-white shadow-sm"
               style={{ backgroundColor: scoreColor }}
@@ -674,7 +730,6 @@ export default function LeadDetailPage() {
               {initials}
             </div>
 
-            {/* Name + title + badges */}
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-xl font-bold text-slate-900">{fullName}</h1>
@@ -691,7 +746,7 @@ export default function LeadDetailPage() {
                 )}
               </div>
               <p className="mt-1 text-sm text-slate-600">
-                {lead.jobTitle}
+                {lead.jobTitle ?? <span className="text-slate-400">{t('common.none')}</span>}
                 {lead.company && (
                   <>
                     <span className="mx-1.5 text-slate-300">·</span>
@@ -819,13 +874,212 @@ export default function LeadDetailPage() {
         </div>
       </Card>
 
-      {/* ── Body ── */}
+      {/* ── Body grid ── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
-        {/* Main column */}
+        {/* ── Main column (2/3) ── */}
         <div className="space-y-4 md:col-span-2">
 
-          {/* Score Breakdown */}
+          {/* ── 2. Lead Information card ── */}
+          <SectionCard
+            title={t('pages.leadDetail.sectionLeadInfo')}
+            icon={
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            }
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <InfoRow
+                label={t('pages.leadDetail.statusLabel')}
+                value={<Badge variant={statusVariant(lead.status)}>{lead.status}</Badge>}
+              />
+              <InfoRow
+                label={t('pages.leadDetail.sourceLabel')}
+                value={<p className="text-sm text-slate-800">{lead.source}</p>}
+              />
+              <InfoRow
+                label={t('pages.leadDetail.importedLabel')}
+                value={
+                  <p className="text-sm text-slate-800">
+                    {new Date(lead.importedAt).toLocaleDateString('en-US', {
+                      month: 'long', day: 'numeric', year: 'numeric',
+                    })}
+                  </p>
+                }
+              />
+              <InfoRow
+                label={t('pages.leadDetail.qualificationStatusLabel')}
+                value={
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${qualVariant}`}>
+                    {qualLabel}
+                  </span>
+                }
+              />
+            </div>
+            {lead.qualificationNotes && (
+              <InfoRow
+                label={t('pages.leadDetail.qualificationNotesLabel')}
+                value={<p className="text-sm text-slate-700">{lead.qualificationNotes}</p>}
+              />
+            )}
+          </SectionCard>
+
+          {/* ── 3. Company Information card ── */}
+          <SectionCard
+            title={t('pages.leadDetail.sectionCompany')}
+            icon={
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            }
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <InfoRow
+                label={t('pages.leadDetail.sectionCompany')}
+                value={lead.company ? <p className="text-sm font-medium text-slate-800">{lead.company}</p> : <Dash />}
+              />
+              <InfoRow
+                label={t('pages.leadDetail.sectionIndustry')}
+                value={lead.industry ? <p className="text-sm text-slate-800">{lead.industry}</p> : <Dash />}
+              />
+              <InfoRow
+                label={t('pages.leadDetail.sectionCompanySize')}
+                value={lead.companySize ? <p className="text-sm text-slate-800">{lead.companySize}</p> : <Dash />}
+              />
+              <InfoRow
+                label={t('pages.leadDetail.sectionRevenue')}
+                value={lead.revenueRange ? <p className="text-sm text-slate-800">{lead.revenueRange}</p> : <Dash />}
+              />
+              <InfoRow
+                label={t('pages.leadDetail.sectionLocation')}
+                value={lead.geography ? <p className="text-sm text-slate-800">{lead.geography}</p> : <Dash />}
+              />
+              <InfoRow
+                label={t('pages.leadDetail.contactWebsite')}
+                value={
+                  lead.companyWebsite ? (
+                    <a
+                      href={lead.companyWebsite}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-indigo-600 hover:underline truncate block"
+                    >
+                      {lead.companyWebsite.replace(/^https?:\/\//, '')}
+                    </a>
+                  ) : <Dash />
+                }
+              />
+            </div>
+          </SectionCard>
+
+          {/* ── 4. Enrichment card ── */}
+          <SectionCard
+            title={t('pages.leadDetail.sectionEnrichment')}
+            icon={
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            }
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <InfoRow
+                label={t('pages.leadDetail.enrichmentStatusLabel')}
+                value={
+                  <Badge variant={enrichmentVariant(lead.enrichmentStatus)}>
+                    {lead.enrichmentStatus}
+                  </Badge>
+                }
+              />
+              <InfoRow
+                label={t('pages.leadDetail.emailVerificationLabel')}
+                value={
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    lead.emailVerificationStatus === 'Verified'   ? 'bg-emerald-100 text-emerald-700' :
+                    lead.emailVerificationStatus === 'Unverified' ? 'bg-red-100 text-red-600' :
+                    'bg-slate-100 text-slate-500'
+                  }`}>
+                    {t(`pages.leadDetail.emailVer${lead.emailVerificationStatus}`)}
+                  </span>
+                }
+              />
+            </div>
+          </SectionCard>
+
+          {/* ── 5. ICP Matching card ── */}
+          <SectionCard
+            title={t('pages.leadDetail.sectionIcpMatch')}
+            icon={
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="9" strokeLinecap="round" />
+                <circle cx="12" cy="12" r="4" strokeLinecap="round" />
+                <path strokeLinecap="round" d="M12 3v2M12 19v2M3 12h2M19 12h2" />
+              </svg>
+            }
+          >
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <InfoRow
+                label={t('pages.leadDetail.icpProfileIdLabel')}
+                value={
+                  lead.icpProfileId ? (
+                    <p className="truncate font-mono text-xs text-slate-600">{lead.icpProfileId}</p>
+                  ) : <Dash />
+                }
+              />
+              <InfoRow
+                label={t('pages.leadDetail.icpScoreLabel')}
+                value={
+                  lead.icpScore !== null ? (
+                    <span className="text-sm font-bold" style={{ color: scoreColor }}>
+                      {lead.icpScore} / 100
+                    </span>
+                  ) : <Dash />
+                }
+              />
+            </div>
+            {lead.matchedCriteria && (
+              <InfoRow
+                label={t('pages.leadDetail.matchedCriteriaLabel')}
+                value={
+                  <div className="flex flex-wrap gap-1.5 mt-0.5">
+                    {lead.matchedCriteria.split(',').map((c) => c.trim()).filter(Boolean).map((c) => (
+                      <span key={c} className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 border border-emerald-100">
+                        ✓ {c}
+                      </span>
+                    ))}
+                  </div>
+                }
+              />
+            )}
+            {!lead.matchedCriteria && (
+              <InfoRow
+                label={t('pages.leadDetail.matchedCriteriaLabel')}
+                value={<Dash />}
+              />
+            )}
+            {lead.mismatchReasons && (
+              <InfoRow
+                label={t('pages.leadDetail.mismatchReasonsLabel')}
+                value={
+                  <div className="flex flex-wrap gap-1.5 mt-0.5">
+                    {lead.mismatchReasons.split(',').map((r) => r.trim()).filter(Boolean).map((r) => (
+                      <span key={r} className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 border border-red-100">
+                        ✗ {r}
+                      </span>
+                    ))}
+                  </div>
+                }
+              />
+            )}
+            {!lead.mismatchReasons && (
+              <InfoRow
+                label={t('pages.leadDetail.mismatchReasonsLabel')}
+                value={<Dash />}
+              />
+            )}
+          </SectionCard>
+
+          {/* ── 6. Score Breakdown card ── */}
           <Card>
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -842,7 +1096,6 @@ export default function LeadDetailPage() {
               )}
             </div>
 
-            {/* Sub-score bars — show if explicit sub-scores OR legacy scoreBreakdown */}
             {hasSubScores ? (
               <div className="space-y-4">
                 <BreakdownBar label={t('pages.leadDetail.jobTitleMatch')}    value={lead.jobTitleMatchScore}    max={30} />
@@ -896,7 +1149,7 @@ export default function LeadDetailPage() {
             )}
           </Card>
 
-          {/* Score History Placeholder */}
+          {/* ── Score History Placeholder ── */}
           <Card>
             <h2 className="mb-1 text-sm font-semibold text-slate-900">{t('pages.leadDetail.scoreHistoryTitle')}</h2>
             <p className="mb-4 text-xs text-slate-500">{t('pages.leadDetail.scoreHistoryDesc')}</p>
@@ -911,7 +1164,7 @@ export default function LeadDetailPage() {
             />
           </Card>
 
-          {/* Outreach / Conversation History */}
+          {/* ── Conversation / Outreach History ── */}
           <Card>
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -924,7 +1177,7 @@ export default function LeadDetailPage() {
               </div>
               {messages.length > 0 && (
                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 tabular-nums">
-                  {messages.filter((m) => m.status === 'Sent').length} sent ·{' '}
+                  {messages.filter((m) => m.status === 'Sent').length} {t('pages.leadDetail.sent').toLowerCase()} ·{' '}
                   {messages.filter((m) => m.status === 'Draft').length} draft
                 </span>
               )}
@@ -933,11 +1186,12 @@ export default function LeadDetailPage() {
               messages={messages}
               onMarkSent={handleMarkSent}
               onDiscard={handleDiscard}
+              isRtl={isRtl}
             />
           </Card>
         </div>
 
-        {/* Sidebar */}
+        {/* ── Sidebar (1/3) ── */}
         <div className="space-y-4">
 
           {/* Status management */}
@@ -948,127 +1202,55 @@ export default function LeadDetailPage() {
             error={statusError}
           />
 
-          {/* Qualification */}
+          {/* ── 7. Qualification card ── */}
           <SectionCard title={t('pages.leadDetail.sectionQualification')}>
             <InfoRow
               label={t('pages.leadDetail.qualificationStatusLabel')}
               value={
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  lead.qualificationStatus === 'QualifiedLead' ? 'bg-emerald-100 text-emerald-700' :
-                  lead.qualificationStatus === 'NotQualified'  ? 'bg-red-100 text-red-600' :
-                  lead.qualificationStatus === 'Nurturing'     ? 'bg-amber-100 text-amber-700' :
-                  'bg-slate-100 text-slate-500'
-                }`}>
-                  {lead.qualificationStatus === 'QualifiedLead' ? t('pages.leadDetail.qualQualifiedLead') :
-                   lead.qualificationStatus === 'NotQualified'  ? t('pages.leadDetail.qualNotQualified') :
-                   lead.qualificationStatus === 'Nurturing'     ? t('pages.leadDetail.qualNurturing') :
-                   t('pages.leadDetail.qualUnknown')}
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${qualVariant}`}>
+                  {qualLabel}
                 </span>
               }
             />
-            {lead.qualificationNotes && (
-              <InfoRow
-                label={t('pages.leadDetail.qualificationNotesLabel')}
-                value={<p className="text-sm text-slate-700">{lead.qualificationNotes}</p>}
-              />
-            )}
-          </SectionCard>
-
-          {/* Enrichment */}
-          <SectionCard title={t('pages.leadDetail.sectionEnrichment')}>
             <InfoRow
-              label={t('pages.leadDetail.enrichmentStatusLabel')}
+              label={t('pages.leadDetail.qualificationNotesLabel')}
               value={
-                <Badge variant={enrichmentVariant(lead.enrichmentStatus)}>
-                  {lead.enrichmentStatus}
-                </Badge>
-              }
-            />
-            <InfoRow
-              label={t('pages.leadDetail.emailVerificationLabel')}
-              value={
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  lead.emailVerificationStatus === 'Verified'   ? 'bg-emerald-100 text-emerald-700' :
-                  lead.emailVerificationStatus === 'Unverified' ? 'bg-red-100 text-red-600' :
-                  'bg-slate-100 text-slate-500'
-                }`}>
-                  {t(`pages.leadDetail.emailVer${lead.emailVerificationStatus}`)}
-                </span>
+                lead.qualificationNotes
+                  ? <p className="text-sm text-slate-700">{lead.qualificationNotes}</p>
+                  : <Dash />
               }
             />
           </SectionCard>
 
-          {/* ICP Match */}
-          {(lead.matchedCriteria || lead.mismatchReasons) && (
-            <SectionCard title={t('pages.leadDetail.sectionIcpMatch')}>
-              {lead.matchedCriteria && (
-                <InfoRow
-                  label={t('pages.leadDetail.matchedCriteriaLabel')}
-                  value={<p className="text-xs text-slate-700">{lead.matchedCriteria}</p>}
-                />
-              )}
-              {lead.mismatchReasons && (
-                <InfoRow
-                  label={t('pages.leadDetail.mismatchReasonsLabel')}
-                  value={<p className="text-xs text-slate-700">{lead.mismatchReasons}</p>}
-                />
-              )}
-            </SectionCard>
-          )}
-
-          {/* Handoff */}
+          {/* ── 8. Handoff card ── */}
           <SectionCard title={t('pages.leadDetail.sectionHandoff')}>
             <InfoRow
               label={t('pages.leadDetail.handoffStatusLabel')}
               value={
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  lead.handoffStatus === 'Sent'  ? 'bg-emerald-100 text-emerald-700' :
-                  lead.handoffStatus === 'Ready' ? 'bg-blue-100 text-blue-700' :
-                  'bg-slate-100 text-slate-500'
-                }`}>
-                  {lead.handoffStatus === 'Sent'  ? t('pages.leadDetail.handoffSent') :
-                   lead.handoffStatus === 'Ready' ? t('pages.leadDetail.handoffReady') :
-                   t('pages.leadDetail.handoffNotReady')}
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${handoffVariant}`}>
+                  {handoffLabel}
                 </span>
               }
             />
-            {lead.handoffTarget && (
-              <InfoRow
-                label={t('pages.leadDetail.handoffTargetLabel')}
-                value={<p className="text-sm text-slate-700">{lead.handoffTarget}</p>}
-              />
-            )}
-            {lead.handoffAt && (
-              <InfoRow
-                label={t('pages.leadDetail.handoffAtLabel')}
-                value={
+            <InfoRow
+              label={t('pages.leadDetail.handoffTargetLabel')}
+              value={lead.handoffTarget ? <p className="text-sm text-slate-700">{lead.handoffTarget}</p> : <Dash />}
+            />
+            <InfoRow
+              label={t('pages.leadDetail.handoffAtLabel')}
+              value={
+                lead.handoffAt ? (
                   <p className="text-sm text-slate-700">
-                    {new Date(lead.handoffAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {new Date(lead.handoffAt).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric', year: 'numeric',
+                    })}
                   </p>
-                }
-              />
-            )}
+                ) : <Dash />
+              }
+            />
           </SectionCard>
 
-          {/* Company info */}
-          {(lead.industry || lead.companySize || lead.revenueRange || lead.geography) && (
-            <SectionCard title={t('pages.leadDetail.sectionCompany')}>
-              {lead.industry && (
-                <InfoRow label={t('pages.leadDetail.sectionIndustry')} value={<p className="text-sm text-slate-800">{lead.industry}</p>} />
-              )}
-              {lead.companySize && (
-                <InfoRow label={t('pages.leadDetail.sectionCompanySize')} value={<p className="text-sm text-slate-800">{lead.companySize}</p>} />
-              )}
-              {lead.revenueRange && (
-                <InfoRow label={t('pages.leadDetail.sectionRevenue')} value={<p className="text-sm text-slate-800">{lead.revenueRange}</p>} />
-              )}
-              {lead.geography && (
-                <InfoRow label={t('pages.leadDetail.sectionLocation')} value={<p className="text-sm text-slate-800">{lead.geography}</p>} />
-              )}
-            </SectionCard>
-          )}
-
-          {/* Notes */}
+          {/* ── 9. Notes card ── */}
           <NotesCard
             notes={lead.notes}
             noteText={noteText}
@@ -1077,24 +1259,10 @@ export default function LeadDetailPage() {
             saving={noteSaving}
             error={noteError}
           />
-
-          {/* Lead Info */}
-          <SectionCard title={t('pages.leadDetail.sectionLeadInfo')}>
-            <InfoRow label={t('pages.leadDetail.statusLabel')} value={<p className="text-sm font-medium text-slate-700">{lead.status}</p>} />
-            <InfoRow label={t('pages.leadDetail.sourceLabel')} value={<p className="text-sm text-slate-700">{lead.source}</p>} />
-            <InfoRow
-              label={t('pages.leadDetail.importedLabel')}
-              value={
-                <p className="text-sm text-slate-700">
-                  {new Date(lead.importedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                </p>
-              }
-            />
-          </SectionCard>
         </div>
       </div>
 
-      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+      {toast && <Toast message={toast} />}
     </div>
   );
 }
