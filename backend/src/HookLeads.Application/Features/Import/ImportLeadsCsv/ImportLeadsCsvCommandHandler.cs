@@ -49,13 +49,7 @@ public class ImportLeadsCsvCommandHandler
 
             if (string.IsNullOrWhiteSpace(row.FirstName))
             {
-                rows.Add(row with { IsValid = false, ValidationError = "First name is required." });
-                continue;
-            }
-
-            if (string.IsNullOrWhiteSpace(row.LastName))
-            {
-                rows.Add(row with { IsValid = false, ValidationError = "Last name is required." });
+                rows.Add(row with { IsValid = false, ValidationError = "Full name is required." });
                 continue;
             }
 
@@ -91,9 +85,31 @@ public class ImportLeadsCsvCommandHandler
             return idx >= 0 && idx < fields.Length ? NullIfEmpty(fields[idx]) : null;
         }
 
+        var firstName = Get("firstname") ?? Get("first_name") ?? Get("first");
+        var lastName = Get("lastname") ?? Get("last_name") ?? Get("last");
+
+        if (firstName == null && lastName == null)
+        {
+            var fullName = Get("fullname") ?? Get("full_name") ?? Get("name");
+            if (fullName != null)
+            {
+                var spaceIdx = fullName.IndexOf(' ');
+                if (spaceIdx > 0)
+                {
+                    firstName = fullName[..spaceIdx].Trim();
+                    lastName = fullName[(spaceIdx + 1)..].Trim();
+                }
+                else
+                {
+                    firstName = fullName;
+                    lastName = string.Empty;
+                }
+            }
+        }
+
         return new ImportPreviewRow(
-            Get("firstname") ?? Get("first_name") ?? Get("first"),
-            Get("lastname") ?? Get("last_name") ?? Get("last"),
+            firstName,
+            lastName,
             Get("email"),
             Get("jobtitle") ?? Get("job_title") ?? Get("title"),
             Get("company"),

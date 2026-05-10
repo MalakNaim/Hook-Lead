@@ -260,7 +260,7 @@ export default function ProtectedLayout({
 
           <NavSection label={t('nav.sections.pipeline')} />
           <div className="space-y-0.5">
-            <NavItem href="/dashboard/import" icon={<IconImport />} onClick={closeMobile} soon>
+            <NavItem href="/dashboard/import" icon={<IconImport />} onClick={closeMobile}>
               {t('nav.items.import')}
             </NavItem>
             <NavItem href="/dashboard/outreach" icon={<IconOutreach />} onClick={closeMobile}>
