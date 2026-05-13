@@ -310,7 +310,7 @@ export function ICPFormPanel({
     effectiveMode === 'view'
       ? t('pages.icpPanel.viewingSub').replace('{name}', profile?.name ?? '')
       : effectiveMode === 'edit'
-      ? t('pages.icpPanel.editingSub').replace('{name}', profile!.name)
+      ? t('pages.icpPanel.editingSub').replace('{name}', profile?.name ?? t('pages.icpPanel.profileFallbackName'))
       : t('pages.icpPanel.newSub');
 
   return (

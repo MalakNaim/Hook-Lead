@@ -78,9 +78,13 @@ export async function createIcpProfile(data: SaveIcpProfileRequest): Promise<ICP
 }
 
 export async function updateIcpProfile(id: string, data: SaveIcpProfileRequest): Promise<ICPProfile> {
-  const raw = await apiFetch<ApiIcpProfile>(`/api/icp-profiles/${id}`, {
+  const raw = await apiFetch<ApiIcpProfile | null>(`/api/icp-profiles/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
+  if (!raw) {
+    // 204 No Content — reconstruct from the sent payload
+    return { id, ...data, updatedAt: new Date().toISOString() };
+  }
   return mapProfile(raw);
 }

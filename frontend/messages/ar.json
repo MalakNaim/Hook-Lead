@@ -362,7 +362,8 @@
       "saving": "جارِ الحفظ…",
       "editBtn": "تعديل الملف",
       "closePanel": "إغلاق اللوحة",
-      "errorFixAbove": "يرجى تصحيح الأخطاء أعلاه"
+      "errorFixAbove": "يرجى تصحيح الأخطاء أعلاه",
+      "profileFallbackName": "ملف بدون اسم"
     },
     "leads": {
       "title": "العملاء المحتملون",

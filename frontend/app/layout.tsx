@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { Cairo } from 'next/font/google';
 import { LocaleProvider } from '@/lib/i18n';
 import './globals.css';
 
@@ -13,6 +14,12 @@ const geistMono = localFont({
   variable: '--font-geist-mono',
   weight: '100 900',
 });
+const cairo = Cairo({
+  subsets: ['latin', 'arabic'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-cairo',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Hook Leads',
@@ -25,7 +32,7 @@ export default function RootLayout({
   return (
     // suppressHydrationWarning: LocaleProvider sets lang/dir on the client after hydration
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} antialiased`}>
         <LocaleProvider>{children}</LocaleProvider>
       </body>
     </html>

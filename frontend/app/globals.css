@@ -14,10 +14,14 @@
   }
 }
 
+html,
+body {
+  font-family: var(--font-cairo), Arial, sans-serif;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-geist-sans), system-ui, Arial, sans-serif;
 }
 
 @layer utilities {

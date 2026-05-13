@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { login } from "@/services/authService";
 import { saveTokens, isAuthenticated } from "@/lib/auth";
@@ -46,7 +46,6 @@ function Spinner() {
 // ── Form ──────────────────────────────────────────────────────────────────────
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/dashboard";
   const { t } = useLocale();
@@ -58,8 +57,8 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated()) router.replace(next);
-  }, [router, next]);
+    if (isAuthenticated()) window.location.replace(next);
+  }, [next]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -67,16 +66,14 @@ function LoginForm() {
     setLoading(true);
     try {
       const data = await login({ email: email.trim().toLowerCase(), password });
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[login] response keys:', Object.keys(data));
-      }
       saveTokens(data.accessToken, data.refreshToken);
-      router.replace(next);
+      // Use hard navigation so the browser sends the new hl_token cookie
+      // with the request and the middleware can validate it.
+      window.location.replace(next);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t("auth.login.genericError"),
       );
-    } finally {
       setLoading(false);
     }
   }

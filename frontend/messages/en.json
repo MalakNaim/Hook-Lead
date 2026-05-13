@@ -362,7 +362,8 @@
       "saving": "Saving…",
       "editBtn": "Edit Profile",
       "closePanel": "Close panel",
-      "errorFixAbove": "Please fix the errors above"
+      "errorFixAbove": "Please fix the errors above",
+      "profileFallbackName": "Untitled Profile"
     },
     "leads": {
       "title": "Leads",
