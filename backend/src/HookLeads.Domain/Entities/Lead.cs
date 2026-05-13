@@ -55,6 +55,7 @@ public class Lead
     // Handoff
     public HandoffStatus HandoffStatus { get; set; } = HandoffStatus.NotReady;
     public string? HandoffTarget { get; set; }
+    public string? HandoffNotes { get; set; }
     public DateTime? HandoffAt { get; set; }
 
     public DateTime ImportedAt { get; set; }

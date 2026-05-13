@@ -21,7 +21,7 @@ public static class LeadExtensions
             lead.Classification?.ToString(),
             lead.QualificationStatus.ToString(), lead.QualificationNotes,
             lead.IcpProfileId, lead.MatchedCriteria, lead.MismatchReasons,
-            lead.HandoffStatus.ToString(), lead.HandoffTarget, lead.HandoffAt,
+            lead.HandoffStatus.ToString(), lead.HandoffTarget, lead.HandoffNotes, lead.HandoffAt,
             lead.ImportedAt);
 
     public static LeadSummaryResult ToLeadSummaryResult(this Lead lead) =>

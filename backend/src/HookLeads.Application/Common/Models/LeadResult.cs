@@ -49,6 +49,7 @@ public record LeadResult(
     // Handoff
     string HandoffStatus,
     string? HandoffTarget,
+    string? HandoffNotes,
     DateTime? HandoffAt,
 
     DateTime ImportedAt);

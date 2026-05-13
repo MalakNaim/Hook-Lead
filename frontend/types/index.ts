@@ -104,6 +104,7 @@ export interface Lead {
   // Handoff
   handoffStatus: HandoffStatus;
   handoffTarget: string | null;
+  handoffNotes: string | null;
   handoffAt: string | null;
 }
 

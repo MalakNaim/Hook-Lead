@@ -69,6 +69,7 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
             .HasMaxLength(50);
 
         builder.Property(l => l.HandoffTarget).HasMaxLength(200);
+        builder.Property(l => l.HandoffNotes).HasMaxLength(5000);
 
         builder.HasIndex(l => new { l.WorkspaceId, l.Email }).IsUnique();
 

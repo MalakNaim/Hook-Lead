@@ -90,6 +90,7 @@ interface ApiLead {
   mismatchReasons: string | null;
   handoffStatus: string;
   handoffTarget: string | null;
+  handoffNotes: string | null;
   handoffAt: string | null;
 }
 
@@ -167,6 +168,7 @@ function mapApiLead(api: ApiLead): Lead {
     mismatchReasons: api.mismatchReasons,
     handoffStatus: (api.handoffStatus as HandoffStatus) ?? 'NotReady',
     handoffTarget: api.handoffTarget,
+    handoffNotes: api.handoffNotes,
     handoffAt: api.handoffAt,
   };
 }
@@ -218,6 +220,38 @@ export async function addLeadNote(leadId: string, note: string): Promise<Lead> {
   const raw = await apiFetch<ApiLead>(`/api/leads/${leadId}/notes`, {
     method: 'POST',
     body: JSON.stringify({ note }),
+  });
+  return mapApiLead(raw);
+}
+
+export async function updateQualification(
+  leadId: string,
+  qualificationStatus: string,
+  qualificationNotes?: string,
+): Promise<Lead> {
+  const raw = await apiFetch<ApiLead>(`/api/leads/${leadId}/qualification`, {
+    method: 'PATCH',
+    body: JSON.stringify({ qualificationStatus, qualificationNotes }),
+  });
+  return mapApiLead(raw);
+}
+
+export async function markHandoffReady(
+  leadId: string,
+  handoffTarget?: string,
+  handoffNotes?: string,
+): Promise<Lead> {
+  const raw = await apiFetch<ApiLead>(`/api/leads/${leadId}/handoff/ready`, {
+    method: 'PATCH',
+    body: JSON.stringify({ handoffTarget, handoffNotes }),
+  });
+  return mapApiLead(raw);
+}
+
+export async function markHandoffSent(leadId: string): Promise<Lead> {
+  const raw = await apiFetch<ApiLead>(`/api/leads/${leadId}/handoff/sent`, {
+    method: 'PATCH',
+    body: JSON.stringify({}),
   });
   return mapApiLead(raw);
 }

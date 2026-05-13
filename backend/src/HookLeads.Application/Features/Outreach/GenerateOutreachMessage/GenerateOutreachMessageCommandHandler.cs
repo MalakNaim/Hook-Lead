@@ -38,11 +38,14 @@ public class GenerateOutreachMessageCommandHandler
         if (lead == null)
             throw new AppException("Lead not found.", 404);
 
-        if (lead.Status == LeadStatus.Disqualified)
-            throw new AppException("Cannot generate outreach for a disqualified lead.", 400);
+        if (lead.Classification == LeadClassification.Reject)
+            throw new AppException("Cannot generate outreach for a Reject lead.", 422);
+
+        if (lead.Classification == LeadClassification.Cold)
+            throw new AppException("Only Warm and Hot leads are eligible for outreach. This lead is classified as Cold.", 422);
 
         if (lead.Status == LeadStatus.Unsubscribed)
-            throw new AppException("Cannot generate outreach for an unsubscribed lead.", 400);
+            throw new AppException("Cannot generate outreach for an unsubscribed lead.", 422);
 
         var workspaceId = _currentWorkspace.WorkspaceId
             ?? throw new AppException("Workspace context is required.", 401);

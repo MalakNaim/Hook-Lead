@@ -15,7 +15,7 @@ const DEFAULT_LEAD_EXTRAS: Pick<
   | 'painMatchScore' | 'activitySignalsScore'
   | 'qualificationStatus' | 'qualificationNotes'
   | 'icpProfileId' | 'matchedCriteria' | 'mismatchReasons'
-  | 'handoffStatus' | 'handoffTarget' | 'handoffAt'
+  | 'handoffStatus' | 'handoffTarget' | 'handoffNotes' | 'handoffAt'
 > = {
   emailVerificationStatus: 'Unknown',
   jobTitleMatchScore: 0,
@@ -30,6 +30,7 @@ const DEFAULT_LEAD_EXTRAS: Pick<
   mismatchReasons: null,
   handoffStatus: 'NotReady',
   handoffTarget: null,
+  handoffNotes: null,
   handoffAt: null,
 };
 

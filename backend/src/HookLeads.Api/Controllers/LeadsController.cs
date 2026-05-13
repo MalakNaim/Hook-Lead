@@ -4,8 +4,13 @@ using HookLeads.Application.Features.Leads.CreateLead;
 using HookLeads.Application.Features.Leads.DeleteLead;
 using HookLeads.Application.Features.Leads.GetLeadById;
 using HookLeads.Application.Features.Leads.GetLeads;
+using HookLeads.Application.Features.Leads.MarkHandoffReady;
+using HookLeads.Application.Features.Leads.MarkHandoffSent;
 using HookLeads.Application.Features.Leads.UpdateLead;
+using HookLeads.Application.Features.Leads.UpdateLeadQualification;
 using HookLeads.Application.Features.Leads.UpdateLeadStatus;
+using HookLeads.Application.Features.Outreach.GenerateOutreachMessage;
+using HookLeads.Application.Features.Outreach.GetOutreachMessages;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -106,5 +111,59 @@ public class LeadsController : ControllerBase
         await validator.ValidateAndThrowAsync(command, cancellationToken);
         var result = await handler.Handle(command, id, cancellationToken);
         return Ok(result);
+    }
+
+    [HttpPatch("{id:guid}/qualification")]
+    public async Task<IActionResult> UpdateQualification(
+        Guid id,
+        [FromBody] UpdateLeadQualificationCommand command,
+        [FromServices] UpdateLeadQualificationCommandHandler handler,
+        [FromServices] IValidator<UpdateLeadQualificationCommand> validator,
+        CancellationToken cancellationToken)
+    {
+        await validator.ValidateAndThrowAsync(command, cancellationToken);
+        var result = await handler.Handle(command, id, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPatch("{id:guid}/handoff/ready")]
+    public async Task<IActionResult> MarkHandoffReady(
+        Guid id,
+        [FromBody] MarkHandoffReadyCommand command,
+        [FromServices] MarkHandoffReadyCommandHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.Handle(command, id, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPatch("{id:guid}/handoff/sent")]
+    public async Task<IActionResult> MarkHandoffSent(
+        Guid id,
+        [FromServices] MarkHandoffSentCommandHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.Handle(id, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{id:guid}/outreach/generate")]
+    public async Task<IActionResult> GenerateOutreach(
+        Guid id,
+        [FromServices] GenerateOutreachMessageCommandHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.Handle(new GenerateOutreachMessageCommand(), id, cancellationToken);
+        return CreatedAtAction(nameof(GetLeadById), new { id }, result);
+    }
+
+    [HttpGet("{id:guid}/outreach/messages")]
+    public async Task<IActionResult> GetOutreachMessages(
+        Guid id,
+        [FromServices] GetOutreachMessagesQueryHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var results = await handler.Handle(new GetOutreachMessagesQuery(id), cancellationToken);
+        return Ok(results);
     }
 }
